@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>直線方程式</title>
+
+<!-- MathJax -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: true },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+
+<style>
+  :root{
+    --scale: 1.2;
+    --panel: #0f142b;
+    --panel-2: #0a0f21;
+    --border: #2a3458;
+    --accent: #4f7df7;
+    --accent-2: #7ac7ff;
+    --correct: #42d392;
+    --wrong: #ff6b6b;
+    --text: #e8ecff;
+    --muted: #a9b3d9;
+
+    --cat-eq: #2e3b7f;
+    --cat-m:  #1f6d6d;
+    --cat-x0: #6b3b8e;
+    --cat-y0: #8e5b2d;
+
+    --highlight-top: rgba(122,199,255,0.18);
+    --highlight-top-border: rgba(122,199,255,0.55);
+    
+    --bg-gradient: radial-gradient(1200px at 18% 0%, #0a102b, #0c1121);
+  }
+
+  /* 淡藍模式變數 - 全新鮮明配色 */
+  body.light-mode {
+    --panel: #e8f4ff;
+    --panel-2: #d6ebff;
+    --border: #7bb5ed;
+    --accent: #0d6efd;
+    --accent-2: #4d9fff;
+    --correct: #0ea86e;
+    --wrong: #e63946;
+    --text: #0a2540;
+    --muted: #3a5775;
+
+    /* 答案池底色 - 四種分類不同淡藍漸層 */
+    --cat-eq: linear-gradient(135deg, #b8dcff, #d4e9ff);
+    --cat-m:  linear-gradient(135deg, #a8f5e0, #c9fef0);
+    --cat-x0: linear-gradient(135deg, #d4c8ff, #e8dfff);
+    --cat-y0: linear-gradient(135deg, #ffd9a8, #ffebcc);
+
+    /* 排行榜第一名高亮 */
+    --highlight-top: rgba(13,110,253,0.15);
+    --highlight-top-border: rgba(13,110,253,0.45);
+    
+    --bg-gradient: radial-gradient(1200px at 18% 0%, #d4ebff, #a8d5ff);
+  }
+
+  html, body {
+    background: var(--bg-gradient);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans TC", "Segoe UI", Arial, "Microsoft JhengHei", sans-serif;
+    font-size: calc(16px * var(--scale));
+    margin: 0; padding: 0;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  .app { max-width: 1200px; margin: 0 auto; padding: 18px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .title-area { display: flex; align-items: center; gap: 16px; }
+  .title { font-weight: 800; letter-spacing: .6px; color: var(--text); text-shadow: 0 1px 0 rgba(0,0,0,0.1); transition: color 0.3s ease; }
+  .controls { display: flex; gap: 12px; align-items: center; }
+
+  /* 滑桿開關 */
+  .theme-toggle-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .theme-toggle-container { position: relative; width: 64px; height: 32px; }
+  .theme-toggle {
+    position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;
+  }
+  .theme-slider {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #2a3458, #1a2140);
+    border-radius: 16px; border: 1px solid var(--border);
+    transition: background 0.3s ease, border-color 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .theme-slider:before {
+    content: ''; position: absolute; height: 24px; width: 24px; left: 4px; bottom: 3px;
+    background: linear-gradient(135deg, #4f7df7, #7ac7ff);
+    border-radius: 50%; transition: transform 0.3s ease, background 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .theme-toggle:checked + .theme-slider {
+    background: linear-gradient(135deg, #5ba4f5, #a8d5ff);
+    border-color: #0d6efd;
+  }
+  .theme-toggle:checked + .theme-slider:before {
+    transform: translateX(32px);
+    background: linear-gradient(135deg, #0d6efd, #4d9fff);
+  }
+  .theme-label {
+    font-size: 0.75em; font-weight: 700; color: var(--muted);
+    text-align: center; white-space: nowrap; transition: color 0.3s ease;
+  }
+
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #ffffff; border: none; border-radius: 12px;
+    padding: 10px 16px; font-weight: 800; cursor: pointer; letter-spacing: .3px;
+    box-shadow: 0 10px 22px rgba(79,125,247,0.35), inset 0 0 0 1px rgba(255,255,255,.12);
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease, background 0.3s ease;
+  }
+  body.light-mode button.primary {
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(13,110,253,0.40), inset 0 0 0 1px rgba(255,255,255,.20);
+  }
+  button.primary:hover { filter: brightness(1.06); box-shadow: 0 12px 26px rgba(79,125,247,0.42), inset 0 0 0 1px rgba(255,255,255,.16); }
+  body.light-mode button.primary:hover { box-shadow: 0 12px 26px rgba(13,110,253,0.50), inset 0 0 0 1px rgba(255,255,255,.25); }
+  button.primary:active { transform: translateY(1px) scale(0.995); }
+
+  .level-badge { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; color: var(--text); font-weight: 700; transition: all 0.3s ease; }
+
+  .layout { display: grid; grid-template-columns: 1.45fr 0.75fr; gap: 16px; }
+
+  .panel {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+    box-shadow: 0 12px 30px rgba(20,30,62,.42), inset 0 0 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(2px);
+    transition: all 0.3s ease;
+  }
+  body.light-mode .panel {
+    box-shadow: 0 8px 24px rgba(13,110,253,.18), inset 0 0 0 1px rgba(255,255,255,.5);
+  }
+  .panel h3 { margin: 0 0 12px; font-size: 1.08em; color: var(--text); font-weight: 800; transition: color 0.3s ease; }
+
+  .grid { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 0.9fr; gap: 8px; }
+  .grid .head {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px; text-align: center; color: var(--text); font-weight: 800; letter-spacing: .2px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    transition: all 0.3s ease;
+  }
+  body.light-mode .grid .head {
+    background: linear-gradient(135deg, #cfe5ff, #e0efff);
+    box-shadow: inset 0 0 0 1px rgba(13,110,253,.15);
+  }
+  .grid .cell {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px; min-height: 64px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    position: relative; overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    transition: all 0.3s ease;
+  }
+  body.light-mode .grid .cell {
+    background: linear-gradient(135deg, #e8f4ff, #f0f8ff);
+    box-shadow: inset 0 0 0 1px rgba(13,110,253,.08);
+  }
+  .cell.blank { outline: 2px dashed var(--accent-2); background: var(--panel); }
+  body.light-mode .cell.blank { 
+    outline: 2px dashed #4d9fff; 
+    background: linear-gradient(135deg, #f5fbff, #ffffff);
+  }
+  .cell.blank.dragover { outline-color: var(--accent); box-shadow: inset 0 0 0 2px rgba(157,227,255,.35); }
+  body.light-mode .cell.blank.dragover { 
+    outline-color: #0d6efd; 
+    box-shadow: inset 0 0 0 3px rgba(13,110,253,.40), 0 0 16px rgba(13,110,253,.35);
+  }
+  .cell.filled { background: var(--panel); border-color: var(--border); }
+  body.light-mode .cell.filled {
+    background: linear-gradient(135deg, #d6ebff, #e8f4ff);
+  }
+
+  .cell.wrong-flash { animation: wrongFlash 350ms ease-in-out 1; }
+  @keyframes wrongFlash {
+    0%   { box-shadow: inset 0 0 0 0 var(--wrong-shadow-start); }
+    50%  { box-shadow: inset 0 0 0 4px var(--wrong-shadow-mid); }
+    100% { box-shadow: inset 0 0 0 0 var(--wrong-shadow-start); }
+  }
+  :root {
+    --wrong-shadow-start: rgba(255,107,107,.25);
+    --wrong-shadow-mid: rgba(255,107,107,.35);
+    --correct-shadow-start: rgba(66,211,146,0.0);
+    --correct-shadow-mid: rgba(66,211,146,0.6);
+    --level-clear-shadow: rgba(66,211,146,0.6);
+  }
+  body.light-mode {
+    --wrong-shadow-start: rgba(230,57,70,.30);
+    --wrong-shadow-mid: rgba(230,57,70,.70);
+    --correct-shadow-start: rgba(14,168,110,0.0);
+    --correct-shadow-mid: rgba(14,168,110,0.75);
+    --level-clear-shadow: rgba(14,168,110,0.75);
+  }
+  
+  .cell.correct-flash { animation: correctFlash 600ms ease-in-out 1; }
+  @keyframes correctFlash {
+    0%   { box-shadow: inset 0 0 0 0 var(--correct-shadow-start); }
+    40%  { box-shadow: inset 0 0 0 6px var(--correct-shadow-mid); }
+    100% { box-shadow: inset 0 0 0 0 var(--correct-shadow-start); }
+  }
+
+  @keyframes levelClearFlash {
+    0%   { box-shadow: 0 0 0 0 var(--correct-shadow-start); }
+    40%  { box-shadow: 0 0 20px 8px var(--level-clear-shadow); }
+    100% { box-shadow: 0 0 0 0 var(--correct-shadow-start); }
+  }
+
+  #questionGrid.level-clear {
+    animation: levelClearFlash 900ms ease-in-out 1;
+    border-radius: 12px;
+  }
+
+  .cell.blank.selected {
+    outline: 2px solid var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    background: var(--panel);
+  }
+body.light-mode .cell.blank.selected {
+  outline: 2px solid #0d6efd;              /* 固定藍色外框 */
+  box-shadow: 0 0 8px #0d6efd;             /* 藍色光暈 */
+  background: #ffffff;                     /* 單色底色，建議用白或淡藍 */
+}
+
+  .hr { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 12px 0; transition: background 0.3s ease; }
+
+  .answers { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 0.9fr; gap: 8px; }
+  .answers .col { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; min-height: 172px; padding: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); transition: all 0.3s ease; }
+  body.light-mode .answers .col {
+    background: linear-gradient(135deg, #e0efff, #f0f8ff);
+    box-shadow: inset 0 0 0 1px rgba(13,110,253,.12);
+  }
+  .col .col-title { color: var(--muted); font-weight: 800; margin-bottom: 6px; text-align: center; transition: color 0.3s ease; }
+
+  .option {
+    border-radius: 12px; padding: 10px; margin: 8px 0; cursor: grab; user-select: none;
+    text-align: center; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 8px 18px rgba(0,0,0,.38);
+    transition: filter .12s ease, transform .08s ease, box-shadow .12s ease, background 0.3s ease;
+    background-image: radial-gradient(220px 120px at 70% 0%, rgba(255,255,255,.06), transparent);
+    display: flex; align-items: center; justify-content: center;
+  }
+  body.light-mode .option {
+    border: 1.5px solid rgba(13,110,253,.25);
+    box-shadow: 0 4px 16px rgba(13,110,253,.20);
+  }
+  .option:active { cursor: grabbing; transform: translateY(1px); }
+.option.selected {
+  outline: 3px solid var(--accent); /* 用變數控制顏色 */
+  box-shadow: 0 0 10px rgba(0, 0, 0, .25), 0 0 0 3px var(--accent-2);
+  filter: brightness(1.05);
+}
+
+body.light-mode .option.selected {
+  outline: 3px solid #0d6efd; /* 固定藍色 */
+  box-shadow: 0 0 10px rgba(13,110,253,.60), 0 0 0 3px rgba(13,110,253,.25);
+  filter: brightness(1.05);
+}
+
+  .option.eq { background: linear-gradient(180deg, #273373, var(--cat-eq)); }
+  .option.m  { background: linear-gradient(180deg, #1b5454, var(--cat-m)); }
+  .option.x0 { background: linear-gradient(180deg, #59307e, var(--cat-x0)); }
+  .option.y0 { background: linear-gradient(180deg, #70461f, var(--cat-y0)); }
+  
+  body.light-mode .option.eq { 
+    background: var(--cat-eq); 
+    color: #0a2c5c; 
+    font-weight: 700; 
+    border-color: #7bb5ed; 
+  }
+  body.light-mode .option.m  { 
+    background: var(--cat-m); 
+    color: #043d2d; 
+    font-weight: 700; 
+    border-color: #6ee7c7; 
+  }
+  body.light-mode .option.x0 { 
+    background: var(--cat-x0); 
+    color: #3a1a5e; 
+    font-weight: 700; 
+    border-color: #b89eda; 
+  }
+  body.light-mode .option.y0 { 
+    background: var(--cat-y0); 
+    color: #5c3310; 
+    font-weight: 700; 
+    border-color: #ffb876; 
+  }
+
+  .donut-wrap { display: grid; grid-template-rows: auto auto auto; gap: 12px; align-items: center; justify-items: center; }
+  .donut-area { width: 100%; max-width: 360px; display: grid; justify-items: center; gap: 10px; transition: transform .2s ease; }
+  canvas#donut {
+    width: 100%; max-width: 280px; aspect-ratio: 1 / 1; border-radius: 18px;
+    background: radial-gradient(400px at 70% 30%, #0c1332, #0a112a);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 12px 22px rgba(19,26,50,.6);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  body.light-mode canvas#donut {
+    background: radial-gradient(400px at 70% 30%, #d4ebff, #b8e0ff);
+    box-shadow: inset 0 0 0 1px rgba(13,110,253,.15), 0 8px 20px rgba(13,110,253,.25);
+  }
+  .counts { display: flex; gap: 12px; color: var(--muted); }
+  .badge { padding: 6px 10px; border-radius: 10px; font-weight: 800; transition: all 0.3s ease; }
+  .badge.ok { background: rgba(66,211,146,.15); color: #9af0c9; border: 1px solid rgba(66,211,146,.25); }
+  .badge.ng { background: rgba(255,107,107,.12); color: #ffc4c4; border: 1px solid rgba(255,107,107,.25); }
+  body.light-mode .badge.ok { 
+    background: rgba(14,168,110,.25); 
+    color: #0a7a50; 
+    border: 1.5px solid rgba(14,168,110,.50); 
+    font-weight: 800; 
+  }
+  body.light-mode .badge.ng { 
+    background: rgba(230,57,70,.25); 
+    color: #a01f2a; 
+    border: 1.5px solid rgba(230,57,70,.50); 
+    font-weight: 800; 
+  }
+
+  .toggle { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; font-weight: 800; cursor: pointer; transition: all 0.3s ease; }
+
+  .board-wrap { width: 100%; max-width: 360px; }
+  .board { width: 100%; border-collapse: collapse; font-size: 1em; }
+  .board th, .board td { border: 1px solid var(--border); padding: 8px; text-align: center; transition: all 0.3s ease; }
+  .board th { background: var(--panel); color: var(--text); }
+/* 深色模式：所有欄位同底色 */
+.board td {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+/* 淡藍模式：所有欄位同底色 */
+body.light-mode .board td {
+  background: linear-gradient(135deg, #e8f4ff, #f5fbff);
+  color: var(--text);
+}
+
+/* 第一名高亮：深色模式 */
+.board tr.highlight-top td {
+  background: var(--highlight-top);
+  border-color: var(--highlight-top-border);
+  font-weight: 800;
+}
+
+/* 第一名高亮：淡藍模式 */
+body.light-mode .board tr.highlight-top td {
+  background: linear-gradient(135deg, #cfe5ff, #e0efff);
+  border-color: rgba(13,110,253,0.55);
+  box-shadow: inset 0 0 8px rgba(13,110,253,0.20);
+  font-weight: 800;
+}
+
+  .footer { margin-top: 12px; text-align: center; color: var(--text); font-weight: 800; letter-spacing: .25px; min-height: 28px; transition: color 0.3s ease; }
+
+  @media (max-width: 900px) {
+    :root { --scale: 1.0; }
+    .layout { grid-template-columns: 1fr; }
+    .grid, .answers { grid-template-columns: 1.74fr 0.765fr 0.765fr 0.765fr; }
+    .grid .cell, .answers .col, .option { padding: 7px; min-height: 32px; }
+    .grid .cell.blank {
+      min-height: 48px; /* 或 40px、50px 視覺調整 */
+    }
+    .grid .head, .col .col-title { font-size: 1em; }
+    .answers .option mjx-container {
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .donut-area { transform: scale(0.9); transform-origin: top center; }
+    canvas#donut { max-width: 252px; }
+    .board-wrap { max-width: 324px; }
+    .board { font-size: 0.99em; }
+    header { justify-content: center; }
+    .title-area { flex-direction: column; align-items: center; }
+  }
+
+  mjx-container[jax="SVG"] svg { max-width: 100%; height: auto; }
+  @media (max-width: 900px) {
+    mjx-container[jax="SVG"] svg {
+      transform: scale(1.07);
+      transform-origin: center;
+    }
+  }
+
+  @keyframes flash { 0%,100%{color: var(--text);} 50%{color: var(--correct);} }
+  .flash { animation: flash 0.6s ease-in-out 3; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title-area">
+      <div class="title">直線方程式</div>
+      <div class="theme-toggle-wrapper">
+        <label class="theme-toggle-container">
+          <input type="checkbox" id="themeToggle" class="theme-toggle">
+          <span class="theme-slider"></span>
+        </label>
+        <span class="theme-label" id="themeLabel">深色模式</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="startBtn" class="primary">開始遊戲!!</button>
+      <div id="levelBadge" class="level-badge">關卡：—</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>題目區，點擊[開始遊戲!!]按鈕</h3>
+      <div id="questionGrid" class="grid"></div>
+      <div class="hr"></div>
+      <h3>答案區，選項點擊/拖曳</h3>
+      <div id="answersArea" class="answers"></div>
+    </div>
+
+    <div class="panel">
+      <h3>答題成績百分比圓盤</h3>
+      <div class="donut-wrap">
+        <div id="donutArea" class="donut-area">
+          <canvas id="donut"></canvas>
+          <div class="counts">
+            <div class="badge ok">正確：<span id="okCount">0</span></div>
+            <div class="badge ng">錯誤：<span id="ngCount">0</span></div>
+          </div>
+          <button id="toggleViewBtn" class="toggle">觀看紀錄</button>
+        </div>
+
+        <div id="boardContainer" class="board-wrap" style="display:none;">
+          <table class="board" id="boardTable">
+            <thead>
+              <tr>
+                <th>名次</th>
+                <th>正確率</th>
+                <th>總次數</th>
+                <th>完成時間</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <button id="toggleBackBtn" class="toggle" style="margin-top:8px;">返回百分比</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footerMsg" class="footer"></div>
+</div>
+
+<script>
+/* 主題切換 */
+const themeToggle = document.getElementById('themeToggle');
+const themeLabel = document.getElementById('themeLabel');
+
+themeToggle.addEventListener('change', function() {
+  if(this.checked) {
+    document.body.classList.add('light-mode');
+    themeLabel.textContent = '淡藍模式';
+  } else {
+    document.body.classList.remove('light-mode');
+    themeLabel.textContent = '深色模式';
+  }
+  drawDonut();
+});
+
+/* 音效：正確/錯誤、過關慶祝（短）、排行榜第一名慶祝（長且風格不同） */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(type='ok'){
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.connect(g).connect(audioCtx.destination);
+  if(type==='ok'){ o.frequency.value=880; g.gain.value=0.08; o.type='sine'; o.start(); setTimeout(()=>o.stop(),120); }
+  else { o.frequency.value=220; g.gain.value=0.06; o.type='square'; o.start(); setTimeout(()=>o.stop(),160); }
+}
+function playMelody(notes, gain=0.08){
+  const now = audioCtx.currentTime;
+  notes.forEach(([freq, dur, type='sine', offset=0])=>{
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = gain;
+    o.connect(g).connect(audioCtx.destination);
+    const start = now + offset;
+    o.start(start);
+    o.stop(start + dur);
+  });
+}
+function celebrateLevel(){
+  const seq = [
+    [523,0.14,'sine',0.00],[587,0.14,'sine',0.15],[659,0.14,'sine',0.30],
+    [698,0.14,'sine',0.45],[784,0.18,'sine',0.60],[988,0.25,'triangle',0.80]
+  ];
+  playMelody(seq, 0.08);
+}
+function celebrateChampion(){
+  const seq = [
+    [392,0.40,'triangle',0.00],[523,0.40,'triangle',0.00],[659,0.40,'triangle',0.00],
+    [784,0.32,'square',0.45],[880,0.32,'square',0.80],[988,0.32,'square',1.15],
+    [1047,0.40,'triangle',1.50],[1175,0.42,'triangle',1.92],[1319,0.48,'triangle',2.36]
+  ];
+  playMelody(seq, 0.09);
+}
+
+/* 狀態 */
+const MAX_LEVEL = 5;
+const state = {
+  level: 0,
+  ok: 0,
+  ng: 0,
+  lines: [],
+  blanks: [],
+  selectedOptionId: null,
+  selectedBlankId: null,
+  sessionBoard: [],
+  pointerFine: matchMedia('(pointer:fine)').matches,
+  cycleDone: false
+};
+
+/* 數學工具與格式：最簡整數比、x 係數正、分數約分 */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a||1; }
+function lcm(x,y){ return Math.abs(x*y)/gcd(x,y); }
+function normalizeABC(a,b,c){
+  const g=gcd(gcd(a,b),c); a/=g; b/=g; c/=g;
+  if(a<0){ a=-a; b=-b; c=-c; }
+  return {a,b,c};
+}
+function randNonZeroInt(min=1,max=9){
+  let r=0;
+  do{ r=Math.floor(Math.random()*(max-min+1))+min; }while(r===0);
+  return r;
+}
+function makeLine(){
+  let a=0,b=0,c=0;
+  do{
+    a=randNonZeroInt(1,9)*(Math.random()<0.5?-1:1);
+    b=randNonZeroInt(1,9)*(Math.random()<0.5?-1:1);
+    c=randNonZeroInt(1,12)*(Math.random()<0.5?-1:1);
+  }while(a===0 || b===0);
+  return normalizeABC(a,b,c);
+}
+function frac(numer,denom){
+  const sign = Math.sign(numer)*Math.sign(denom);
+  numer=Math.abs(numer); denom=Math.abs(denom);
+  const g=gcd(numer,denom); numer/=g; denom/=g;
+  if(denom===1){
+    const v = sign<0 ? -numer : numer;
+    return {type:'int', value:v, latex:String(v)};
+  }
+  const s = sign<0 ? '-' : '';
+  return {type:'frac', value:numer/denom*(sign<0?-1:1), latex:`${s}\\frac{${numer}}{${denom}}`};
+}
+function slopeFrac(a,b){ return frac(-a,b); }
+function xInterceptFrac(c,a){ return frac(-c,a); }
+function yInterceptFrac(c,b){ return frac(-c,b); }
+
+function lineLatex({a,b,c}){
+  const A=(a===1)?'':String(a);
+  const Bsign=(b<0)?'-':'+'; const Babs=Math.abs(b);
+  const B=(Babs===1)?'':String(Babs);
+  const Csign=(c<0)?'-':'+'; const Cabs=Math.abs(c);
+  return `\\(${A}x ${Bsign} ${B}y ${Csign} ${Cabs} = 0\\)`;
+}
+
+/* 圓盤 */
+function drawDonut(){
+  const cvs=document.getElementById('donut'); const ctx=cvs.getContext('2d');
+  const size=280; cvs.width=size; cvs.height=size;
+  const cx=size/2, cy=size/2, r=size*0.38, thick=size*0.12;
+  ctx.clearRect(0,0,size,size);
+  const total=state.ok+state.ng, okRatio=total?state.ok/total:0, ngRatio=total?state.ng/total:0, start=-Math.PI/2;
+  
+  const isLightMode = document.body.classList.contains('light-mode');
+  const bgColor = isLightMode ? 'rgba(13,110,253,0.12)' : 'rgba(255,255,255,0.08)';
+  const okColor = isLightMode ? '#0ea86e' : '#42d392';
+  const ngColor = isLightMode ? '#e63946' : '#ff6b6b';
+  const textColor = isLightMode ? '#0a2540' : '#e8ecff';
+  const mutedColor = isLightMode ? '#3a5775' : '#a9b3d9';
+  
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle=bgColor; ctx.lineWidth=thick; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r,start,start+okRatio*2*Math.PI); ctx.strokeStyle=okColor; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r,start+okRatio*2*Math.PI,start+(okRatio+ngRatio)*2*Math.PI); ctx.strokeStyle=ngColor; ctx.lineWidth=thick; ctx.lineCap='round'; ctx.stroke();
+  ctx.fillStyle=textColor; ctx.font='800 20px ui-sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const okPct=total?Math.round(okRatio*100):0, ngPct=total?Math.round(ngRatio*100):0;
+  ctx.fillText(`正確 ${okPct}%`, cx, cy-12);
+  ctx.fillStyle=mutedColor; ctx.font='700 14px ui-sans-serif';
+  ctx.fillText(`錯誤 ${ngPct}% / 次數 ${total}`, cx, cy+12);
+}
+
+/* 表頭 */
+function renderHeaders(){
+  const grid=document.getElementById('questionGrid'); grid.innerHTML='';
+  ['直線方程式','斜率','x 截距','y 截距'].forEach(h=>{
+    const div=document.createElement('div'); div.className='head'; div.textContent=h; grid.appendChild(div);
+  });
+}
+
+/* 每關空格數（遞進難度） */
+function blanksPerLevel(level){ return [5,6,7,8,9][Math.min(level-1,4)]; }
+
+/* 生成三條，斜率互異 */
+function generateLines(){
+  const lines=[], slopes=new Set();
+  while(lines.length<3){
+    const L=makeLine(); const m=slopeFrac(L.a,L.b).value;
+    let dup=false; slopes.forEach(s=>{ if(Math.abs(s-m)<1e-12) dup=true; });
+    if(dup) continue; slopes.add(m); lines.push(L);
+  }
+  return lines;
+}
+
+/* 題型配置（依關卡） */
+function levelPatterns(level){
+  switch(level){
+    case 1: return ['T1','T1','T1'];
+    case 2: return ['T1','T2','T2'];
+    case 3: return ['T1','T2','T3'];
+    case 4: return ['T1','T2','T4'];
+    case 5: return ['T2','T3','T5'];
+    default: return ['T1','T2','T3'];
+  }
+}
+
+/* 每列已知/空白配置 */
+function buildRowData(L, pattern){
+  const m=slopeFrac(L.a,L.b), x0=xInterceptFrac(L.c,L.a), y0=yInterceptFrac(L.c,L.b);
+  const eqGeneral = lineLatex(L);
+  const eqIntercept = `\\(\\frac{x}{${x0.latex}} + \\frac{y}{${y0.latex}} = 1\\)`;
+  const eqDisplay = (pattern==='T5') ? eqIntercept : eqGeneral;
+
+  const entries = [
+    {cat:'eq',  latex:eqDisplay, known:true},
+    {cat:'m',   latex:`\\(${m.latex}\\)`,     known:false},
+    {cat:'x0',  latex:`\\(${x0.latex}\\)`,    known:false},
+    {cat:'y0',  latex:`\\(${y0.latex}\\)`,    known:false}
+  ];
+
+  const knownByPattern = {
+    T1: ['eq'],
+    T2: ['m','y0'],
+    T3: ['m','x0'],
+    T4: ['x0','y0'],
+    T5: ['x0','y0']
+  }[pattern];
+
+  entries.forEach(e=>{ e.known = knownByPattern.includes(e.cat); });
+  return entries;
+}
+
+/* 答案鍵（避免重複） */
+function makeAnswerKey(rowIdx,cat, pattern){
+  const L=state.lines[rowIdx];
+  const m=slopeFrac(L.a,L.b), x0=xInterceptFrac(L.c,L.a), y0=yInterceptFrac(L.c,L.b);
+  switch(cat){
+    case 'eq': return (pattern==='T5')
+      ? `eq-${rowIdx}-int-${x0.latex}-${y0.latex}`
+      : `eq-${rowIdx}-${L.a}_${L.b}_${L.c}`;
+    case 'm':  return `m-${rowIdx}-${m.latex}`;
+    case 'x0': return `x0-${rowIdx}-${x0.latex}`;
+    case 'y0': return `y0-${rowIdx}-${y0.latex}`;
+  }
+}
+
+/* 題目渲染（每列 2~3 空，總空格依關卡） */
+function renderQuestions() {
+  const grid = document.getElementById('questionGrid');
+  state.blanks = [];
+  grid.innerHTML = '';
+
+  const patterns = levelPatterns(state.level);
+  const perLevelTotal = blanksPerLevel(state.level);
+  const base = 2;
+  let remaining = perLevelTotal - base * 3;
+  const extra = [0, 0, 0];
+  while (remaining > 0) {
+    const i = Math.floor(Math.random() * 3);
+    if (extra[i] < 1) { extra[i]++; remaining--; }
+  }
+
+  state.lines.forEach((L, rowIdx) => {
+    const pattern = patterns[rowIdx];
+    const cellData = buildRowData(L, pattern);
+
+    const blankableIdx = [];
+    cellData.forEach((e, ix) => { if (!e.known) blankableIdx.push(ix); });
+
+    const blanksThisRow = base + extra[rowIdx];
+    const chosen = [];
+    while (chosen.length < blanksThisRow && blankableIdx.length > 0) {
+      const pick = blankableIdx[Math.floor(Math.random() * blankableIdx.length)];
+      if (!chosen.includes(pick)) chosen.push(pick);
+      if (chosen.length >= blankableIdx.length) break;
+    }
+
+    cellData.forEach((cd, colIdx) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.touchAction = 'manipulation';
+      cell.dataset.cat = cd.cat;
+
+      if (chosen.includes(colIdx)) {
+        cell.classList.add('blank');
+        const blankId = `r${rowIdx}_c${colIdx}`;
+        const aKey = makeAnswerKey(rowIdx, cd.cat, pattern);
+        cell.dataset.blankId = blankId;
+        cell.dataset.answerKey = aKey;
+
+        const hint = document.createElement('div');
+        hint.style.color = 'rgba(128,128,128,.5)';
+        hint.style.fontWeight = '800';
+        hint.textContent = ({ eq: '直線方程式', m: '斜率', x0: 'x 截距', y0: 'y 截距' })[cd.cat];
+        cell.appendChild(hint);
+
+        if (state.pointerFine) {
+          cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const dt = e.dataTransfer.getData('text/plain');
+            try {
+              const { cat } = JSON.parse(dt);
+              if (cat === cd.cat) cell.classList.add('dragover');
+            } catch (_) { }
+          });
+          cell.addEventListener('dragleave', () => cell.classList.remove('dragover'));
+          cell.addEventListener('drop', (e) => {
+            e.preventDefault(); cell.classList.remove('dragover');
+            let payload;
+            try { payload = JSON.parse(e.dataTransfer.getData('text/plain')); } catch (_) { return; }
+            if (payload.cat !== cd.cat) return;
+            applyAnswer(cell, payload);
+          });
+        }
+
+        cell.addEventListener('click', () => {
+          if (state.selectedOptionId) {
+            const opt = document.getElementById(state.selectedOptionId);
+            if (!opt) return;
+            const payload = {
+              cat: opt.dataset.cat,
+              key: opt.dataset.key,
+              latex: opt.innerHTML,
+              domId: opt.id
+            };
+            if (payload.cat !== cd.cat) return;
+            applyAnswer(cell, payload);
+          } else {
+            if (state.selectedBlankId === blankId) {
+              cell.classList.remove('selected');
+              state.selectedBlankId = null;
+            } else {
+              document.querySelectorAll('.cell.blank.selected').forEach(c => c.classList.remove('selected'));
+              cell.classList.add('selected');
+              state.selectedBlankId = blankId;
+            }
+          }
+        });
+
+        state.blanks.push({ blankId, cat: cd.cat, answerKey: aKey, latex: cd.latex });
+      } else {
+        cell.innerHTML = cd.latex;
+      }
+      grid.appendChild(cell);
+    });
+  });
+
+  if (window.MathJax?.typesetPromise) { MathJax.typesetPromise(); }
+}
+
+/* 答案池（分類＋去重） */
+function renderAnswerColumns() {
+  const area = document.getElementById('answersArea');
+  area.innerHTML = '';
+  const cols = [
+    { cat: 'eq', title: '直線方程式', class: 'eq' },
+    { cat: 'm', title: '斜率', class: 'm' },
+    { cat: 'x0', title: 'x 截距', class: 'x0' },
+    { cat: 'y0', title: 'y 截距', class: 'y0' }
+  ];
+  const need = { eq: new Map(), m: new Map(), x0: new Map(), y0: new Map() };
+  state.blanks.forEach(b => need[b.cat].set(b.answerKey, b));
+
+  cols.forEach((colDef, idx) => {
+    const col = document.createElement('div');
+    col.className = 'col';
+    const title = document.createElement('div');
+    title.className = 'col-title';
+    title.textContent = colDef.title;
+    col.appendChild(title);
+
+    const list = Array.from(need[colDef.cat].values());
+    list.sort(() => Math.random() - 0.5);
+
+    list.forEach((b, i) => {
+      const opt = document.createElement('div');
+      opt.className = `option ${colDef.class}`;
+      const domId = `opt_${colDef.cat}_${idx}_${i}`;
+      opt.id = domId;
+      opt.draggable = state.pointerFine;
+      opt.dataset.cat = colDef.cat;
+      opt.dataset.key = b.answerKey;
+      opt.dataset.domId = domId;
+      opt.innerHTML = b.latex;
+
+      if (state.pointerFine) {
+        opt.addEventListener('dragstart', (e) => {
+          const payload = { cat: colDef.cat, key: b.answerKey, latex: b.latex, domId };
+          e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+        });
+      }
+
+      opt.addEventListener('click', () => {
+        if (state.selectedBlankId) {
+          const blankCell = document.querySelector(`.cell.blank[data-blank-id="${state.selectedBlankId}"]`);
+          if (blankCell) {
+            if (blankCell.dataset.cat !== colDef.cat) {
+              return;
+            }
+            const payload = { cat: colDef.cat, key: b.answerKey, latex: b.latex, domId };
+            applyAnswer(blankCell, payload);
+          }
+          blankCell?.classList.remove('selected');
+          state.selectedBlankId = null;
+          return;
+        }
+
+        if (state.selectedOptionId && state.selectedOptionId !== domId) {
+          const prev = document.getElementById(state.selectedOptionId);
+          if (prev) prev.classList.remove('selected');
+        }
+        if (state.selectedOptionId === domId) {
+          opt.classList.remove('selected');
+          state.selectedOptionId = null;
+        } else {
+          opt.classList.add('selected');
+          state.selectedOptionId = domId;
+        }
+      });
+
+      col.appendChild(opt);
+    });
+
+    area.appendChild(col);
+  });
+
+  if (window.MathJax?.typesetPromise) { MathJax.typesetPromise(); }
+}
+
+/* 作答邏輯：填答正確／錯誤處理 */
+function applyAnswer(cell, payload){
+  if(cell.classList.contains('filled')) return;
+
+  const isCorrect = (payload.key === cell.dataset.answerKey);
+
+  if(isCorrect){
+    state.ok++;
+    cell.innerHTML = payload.latex;
+    cell.classList.remove('blank');
+    cell.classList.add('filled');
+
+    cell.classList.add('correct-flash');
+    setTimeout(()=>cell.classList.remove('correct-flash'), 600);
+
+    playBeep('ok');
+
+    const opt = document.getElementById(payload.domId);
+    if(opt && opt.parentElement) opt.parentElement.removeChild(opt);
+
+    if(state.selectedOptionId === payload.domId){
+      state.selectedOptionId = null;
+    }
+
+    if(window.MathJax?.typesetPromise){
+      MathJax.typesetPromise([cell]);
+    }
+
+    checkLevelProgress();
+
+  } else {
+    state.ng++;
+    playBeep('ng');
+
+    cell.classList.add('wrong-flash');
+    setTimeout(()=>cell.classList.remove('wrong-flash'), 350);
+
+    if(state.selectedOptionId){
+      const opt = document.getElementById(state.selectedOptionId);
+      if(opt) opt.classList.remove('selected');
+      state.selectedOptionId = null;
+    }
+  }
+
+  updateCounts();
+}
+
+/* 關卡流程 */
+function resetCounts(){ state.ok=0; state.ng=0; updateCounts(); }
+function updateCounts(){ document.getElementById('okCount').textContent=state.ok; document.getElementById('ngCount').textContent=state.ng; drawDonut(); }
+
+function isValidLines(lines){
+  const slopes = new Set();
+  const xints  = new Set();
+  const yints  = new Set();
+  const eqs    = new Set();
+
+  const crossValues = new Set();
+
+  for(const L of lines){
+    const m  = slopeFrac(L.a,L.b).value;
+    const x0 = xInterceptFrac(L.c,L.a).value;
+    const y0 = yInterceptFrac(L.c,L.b).value;
+    const eq = `${L.a}_${L.b}_${L.c}`;
+
+    if(slopes.has(m) || xints.has(x0) || yints.has(y0) || eqs.has(eq)){
+      return false;
+    }
+
+    const valuesToCheck = [m, x0, y0];
+    for(const v of valuesToCheck){
+      if(crossValues.has(v)){
+        return false;
+      }
+      crossValues.add(v);
+    }
+
+    slopes.add(m);
+    xints.add(x0);
+    yints.add(y0);
+    eqs.add(eq);
+  }
+
+  return true;
+}
+
+function startLevel(lv){
+  state.level=lv; 
+  state.selectedOptionId=null;
+  document.getElementById('levelBadge').textContent=`關卡：${lv} / ${MAX_LEVEL}`;
+  document.getElementById('footerMsg').textContent='';
+
+  let valid = false;
+  while(!valid){
+    renderHeaders();
+    state.lines=generateLines();
+
+    if(lv===5){
+      const pats = levelPatterns(lv);
+      for(let i=0;i<3;i++){
+        if(pats[i]==='T5'){
+          const L = state.lines[i];
+          const LC = lcm(L.a, L.b);
+          const k = Math.floor(Math.random()*3)+1;
+          const c = -LC*k;
+          state.lines[i] = normalizeABC(L.a, L.b, c);
+        }
+      }
+    }
+
+    if(isValidLines(state.lines)){
+      valid = true;
+    }
+  }
+
+  renderQuestions();
+  renderAnswerColumns();
+  updateCounts();
+
+  const blanksCount=state.blanks.length;
+  document.getElementById('footerMsg').textContent=`本關需填空數量：${blanksCount}`;
+}
+
+function finishCycle(){
+  const total=state.ok+state.ng; const pct=total?Math.round(state.ok/total*100):0;
+  document.getElementById('footerMsg').textContent=`恭喜完成闖關!! 🎉 總正確率：${pct}%`;
+  celebrateLevel();
+  addRecordToBoard({ pct, total, finishedAt: new Date() });
+  state.cycleDone = true;
+  document.getElementById('startBtn').textContent = '再玩一次';
+}
+
+function checkLevelProgress(){
+  const remain = document.querySelectorAll('#answersArea .option').length;
+  if(remain === 0){
+    const footer = document.getElementById('footerMsg');
+    const grid   = document.getElementById('questionGrid');
+
+    grid.classList.add('level-clear');
+    setTimeout(()=>grid.classList.remove('level-clear'), 900);
+
+    if(state.level < MAX_LEVEL){
+      footer.textContent = `第 ${state.level} 關完成！`;
+      footer.classList.add('flash');
+
+      setTimeout(()=>{
+        footer.classList.remove('flash');
+        startLevel(state.level + 1);
+      }, 1200);
+
+      celebrateLevel();
+    } else {
+      finishCycle();
+    }
+  }
+}
+
+/* 排行榜（本次開啟有效） */
+function addRecordToBoard(rec){
+  const prevTop = state.sessionBoard.length ? state.sessionBoard[0] : null;
+  state.sessionBoard.push(rec);
+  state.sessionBoard.sort((a,b)=>{
+    if(b.pct !== a.pct) return b.pct - a.pct;
+    if(a.total !== b.total) return a.total - b.total;
+    return a.finishedAt - b.finishedAt;
+  });
+  renderBoard();
+  const newTop = state.sessionBoard[0];
+  if(newTop === rec && (!prevTop || newTop.pct > prevTop.pct || (newTop.pct === prevTop.pct && newTop.total < prevTop.total))){
+    celebrateChampion();
+  }
+}
+function renderBoard(){
+  const tbody = document.querySelector('#boardTable tbody');
+  tbody.innerHTML = '';
+  state.sessionBoard.forEach((r, i)=>{
+    const tr = document.createElement('tr');
+    const rank = i+1;
+    const timeStr = r.finishedAt.toLocaleTimeString();
+    tr.innerHTML = `<td>${rank}</td><td>${r.pct}%</td><td>${r.total}</td><td>${timeStr}</td>`;
+    if(i===0){ tr.classList.add('highlight-top'); }
+    tbody.appendChild(tr);
+  });
+}
+
+/* 視圖切換 */
+const toggleViewBtn = document.getElementById('toggleViewBtn');
+const toggleBackBtn = document.getElementById('toggleBackBtn');
+const donutArea = document.getElementById('donutArea');
+const boardContainer = document.getElementById('boardContainer');
+function showBoard(){ donutArea.style.display = 'none'; boardContainer.style.display = 'block'; }
+function showDonut(){ boardContainer.style.display = 'none'; donutArea.style.display = 'grid'; }
+toggleViewBtn.addEventListener('click', showBoard);
+toggleBackBtn.addEventListener('click', showDonut);
+
+/* 入口：開始 / 重新開始 / 再玩一次 */
+document.getElementById('startBtn').addEventListener('click',()=>{
+  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
+  if(state.cycleDone){
+    state.cycleDone = false;
+    document.getElementById('startBtn').textContent='重新開始';
+  } else {
+    document.getElementById('startBtn').textContent='重新開始';
+  }
+  resetCounts(); startLevel(1);
+  document.getElementById('footerMsg').textContent = '';
+  showDonut();
+});
+
+/* 初始渲染 */
+renderHeaders();
+drawDonut();
+</script>
+</body>
+</html>

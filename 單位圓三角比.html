@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯⚡ 單位圓三角比</title>
+<script>
+MathJax = {
+  tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']] },
+  options: { skipHtmlTags:['script','noscript','style','textarea'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
+<style>
+:root{
+  --primary:#6c63ff;--secondary:#ff6584;--accent:#43e97b;
+  --gold:#f7971e;--dark:#1a1a2e;--card:#16213e;--card2:#0f3460;
+  --text:#eaeaea;--muted:#a0a8c3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--dark);color:var(--text);min-height:100vh;}
+
+/* ── Header ── */
+header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--primary);position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(108,99,255,.3);}
+header h1{font-size:1.25rem;background:linear-gradient(90deg,#f7971e,#ffd200,#f093fb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.score-bar{display:flex;gap:18px;align-items:center;}
+.stat{text-align:center;}
+.stat .val{font-size:1.35rem;font-weight:700;color:var(--gold);}
+.stat .lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+/* ── Tab Nav ── */
+nav{display:flex;gap:8px;padding:10px 16px;background:var(--card);border-bottom:1px solid #2a2a4a;}
+nav button{padding:9px 22px;border-radius:30px;border:2px solid transparent;cursor:pointer;font-weight:600;font-size:.88rem;transition:all .22s;background:var(--card2);color:var(--muted);}
+nav button.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 0 16px rgba(108,99,255,.5);}
+nav button:hover:not(.active){border-color:var(--primary);color:var(--text);}
+
+/* ── Panel ── */
+.panel{display:none;padding:20px 16px;max-width:960px;margin:0 auto;}
+.panel.active{display:block;}
+.panel-title{font-size:1.4rem;font-weight:700;margin-bottom:4px;}
+.panel-desc{color:var(--muted);margin-bottom:16px;font-size:.88rem;}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid #2a2a4a;}
+
+/* ── Shared btn ── */
+.btn{padding:9px 20px;border-radius:30px;border:none;cursor:pointer;font-weight:700;font-size:.88rem;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#a18cd1);color:#fff;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(108,99,255,.4);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#fdc830);color:#1a1a2e;}
+.btn-success{background:linear-gradient(135deg,var(--accent),#38f9d7);color:#1a1a2e;}
+
+/* ── Slider ── */
+.slider-wrap{display:flex;align-items:center;gap:10px;margin:8px 0;}
+.slider-wrap label{min-width:72px;font-size:.86rem;color:var(--muted);}
+input[type=range]{flex:1;accent-color:var(--primary);}
+.slider-val{min-width:52px;text-align:right;font-weight:700;color:var(--accent);}
+
+/* ── UC info panel ── */
+#uc-info{background:var(--card2);border-radius:12px;padding:14px;margin-top:10px;}
+.trig-vals{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;align-items:flex-start;}
+.trig-val{text-align:center;flex:1;min-width:70px;}
+.trig-val .name{font-size:.7rem;color:var(--muted);margin-bottom:4px;}
+.trig-val .num{
+  font-size:1.1rem;font-weight:700;
+  height:56px;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* MathJax sizing in info panel — inline row layout */
+#uc-sin mjx-container,#uc-cos mjx-container,#uc-tan mjx-container{font-size:.85em !important;line-height:1;margin:0 !important;}
+.sq-opt mjx-container{font-size:1.3em !important;line-height:1.4;}
+.sq-question mjx-container{font-size:1.6em !important;}
+.def-math mjx-container{font-size:1.15em !important;line-height:1.6;}
+
+/* ── Canvas overlay for fraction labels ── */
+.uc-canvas-wrap{position:relative;flex-shrink:0;}
+.uc-canvas-wrap canvas{cursor:crosshair;border-radius:14px;max-width:100%;display:block;}
+#uc-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;overflow:hidden;
+}
+.ov-label{
+  position:absolute;transform:translate(-50%,-50%);
+  background:rgba(10,22,40,0.80);border-radius:6px;
+  padding:2px 6px;font-size:.8rem;font-weight:700;
+  white-space:nowrap;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.ov-label mjx-container{font-size:1.1em !important;}
+
+/* feedback (speed quiz) */
+.feedback{padding:11px 16px;border-radius:11px;font-weight:600;font-size:.9rem;margin:8px 0;display:none;}
+.feedback.ok{background:rgba(67,233,123,.14);border:1px solid var(--accent);color:var(--accent);display:block;}
+.feedback.ng{background:rgba(255,101,132,.14);border:1px solid var(--secondary);color:var(--secondary);display:block;}
+
+/* ═══ Speed Quiz (G3) ═══ */
+.sq-timer-bar{height:8px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.sq-timer-fill{height:100%;border-radius:10px;width:100%;background:linear-gradient(90deg,#4facfe,#00f2fe);transition:width .1s linear,background .3s;}
+.sq-mode-row{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+.sq-mode-btn{padding:8px 18px;border-radius:11px;border:2px solid rgba(255,255,255,.18);background:var(--card2);color:var(--muted);cursor:pointer;font-size:.86rem;font-weight:600;transition:all .2s;}
+.sq-mode-btn.active{background:linear-gradient(135deg,rgba(240,147,251,.28),rgba(245,87,108,.28));border-color:#f093fb;color:#fff;}
+.sq-mode-btn:hover{transform:translateY(-1px);}
+.sq-progress-dots{display:flex;gap:5px;justify-content:center;margin-bottom:10px;flex-wrap:wrap;}
+.sq-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.14);}
+.sq-dot.ok{background:#64ff96;}
+.sq-dot.ng{background:#ff6464;}
+.sq-dot.cur{background:#4facfe;animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.sq-panel{background:var(--card);border-radius:20px;padding:24px 18px;border:1px solid #2a2a4a;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.sq-start-icon{font-size:2.8em;margin-bottom:12px;}
+.sq-start-note{font-size:1.05em;opacity:.8;margin-bottom:5px;}
+.sq-start-note2{font-size:.85em;opacity:.5;margin-bottom:16px;}
+.sq-start-btn{padding:14px 44px;border-radius:14px;border:none;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:1.2em;font-weight:bold;cursor:pointer;transition:all .22s;}
+.sq-start-btn:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(240,147,251,.4);}
+.sq-diff-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72em;font-weight:bold;margin-bottom:8px;}
+.sq-diff-badge.easy{background:rgba(100,255,150,.2);color:#64ff96;}
+.sq-diff-badge.medium{background:rgba(255,200,50,.2);color:#ffc832;}
+.sq-diff-badge.hard{background:rgba(255,100,100,.2);color:#ff6464;}
+.sq-question{font-size:1.3em;font-weight:bold;margin-bottom:16px;line-height:1.6;min-height:60px;display:flex;align-items:center;justify-content:center;}
+.sq-mini{display:none;margin-bottom:14px;}
+
+/* Option buttons: tall enough for display-style fracs */
+.sq-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;max-width:460px;}
+.sq-opt{
+  padding:12px 10px;border-radius:11px;
+  border:2px solid rgba(255,255,255,.14);
+  background:var(--card2);color:var(--text);
+  cursor:pointer;font-size:1em;font-weight:bold;
+  transition:all .16s;
+  min-height:78px;         /* taller for display fracs */
+  display:flex;align-items:center;justify-content:center;
+}
+.sq-opt:hover{background:#1e2a5e;transform:translateY(-2px);border-color:var(--primary);}
+.sq-opt.correct{background:rgba(100,255,150,.22);border-color:#64ff96;color:#64ff96;animation:sqPulse .3s ease;}
+.sq-opt.wrong{background:rgba(255,80,80,.22);border-color:#ff5050;color:#ff5050;}
+.sq-opt.reveal{background:rgba(100,255,150,.12);border-color:#64ff96;color:#64ff96;}
+@keyframes sqPulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.sq-kb-hint{font-size:.72em;opacity:.3;margin-top:8px;}
+.sq-end-wrap{text-align:center;}
+.sq-final-score{font-size:2.8em;font-weight:bold;background:linear-gradient(90deg,#f093fb,#4facfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:8px 0;}
+.sq-grade{font-size:1.3em;margin-bottom:12px;}
+.sq-stats-text{font-size:.88em;opacity:.55;margin-bottom:14px;}
+.sq-restart-btn{padding:12px 34px;border-radius:13px;border:none;background:linear-gradient(135deg,#4facfe,#00f2fe);color:#000;font-size:1em;font-weight:bold;cursor:pointer;transition:all .2s;}
+.sq-restart-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,172,254,.4);}
+
+/* ── Shared FX ── */
+#toast{position:fixed;top:72px;right:16px;background:var(--card2);border:1px solid var(--primary);border-radius:12px;padding:12px 18px;color:var(--text);font-weight:600;z-index:9999;transform:translateX(130%);transition:transform .3s;max-width:260px;}
+#toast.show{transform:translateX(0);}
+#confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;}
+.popup-anim{position:fixed;top:50%;left:50%;font-size:2.5em;font-weight:bold;pointer-events:none;z-index:9999;animation:popFly .85s ease forwards;}
+@keyframes popFly{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}45%{opacity:1;transform:translate(-50%,-90%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-180%) scale(.8)}}
+
+#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0;transition:opacity .4s;}
+#bgCanvas.show{opacity:1;}
+
+@media(max-width:600px){
+  .sq-opts{grid-template-columns:1fr;}
+  .panel-title{font-size:1.15rem;}
+}
+
+/* ══ 模式切換列（舊版，已移至 header，隱藏）══ */
+.input-mode-row{display:none;}
+
+/* ── Header 右上角模式切換 ── */
+.header-mode-toggle{
+  display:flex;gap:4px;align-items:center;
+  background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:30px;padding:3px;
+}
+.hmt-btn{
+  padding:5px 12px;border-radius:24px;border:none;cursor:pointer;
+  font-weight:700;font-size:.76rem;transition:all .22s;
+  background:transparent;color:var(--muted);
+  display:flex;align-items:center;gap:4px;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.hmt-btn .hmt-icon{font-size:.95rem;}
+.hmt-btn.hmt-active-press{
+  background:linear-gradient(135deg,#f7971e,#fdc830);
+  color:#1a1a2e;box-shadow:0 2px 10px rgba(247,151,30,.45);
+}
+.hmt-btn:hover:not(.hmt-active-press){
+  background:rgba(255,255,255,.1);color:var(--text);
+}
+/* 舊版 mode-tab（保留但隱藏）*/
+.mode-tab{
+  flex:1;padding:10px 6px;border:none;cursor:pointer;font-weight:700;font-size:.88rem;
+  background:var(--card2);color:var(--muted);transition:all .22s;display:flex;
+  flex-direction:column;align-items:center;gap:3px;
+}
+.mode-tab .mode-icon{font-size:1.3rem;}
+.mode-tab .mode-lbl{font-size:.72rem;letter-spacing:.03em;}
+.mode-tab.active-press{background:linear-gradient(135deg,#f7971e,#fdc830);color:#1a1a2e;box-shadow:inset 0 0 16px rgba(0,0,0,.15);}
+
+/* ── 按壓模式面板 ── */
+#press-panel{display:block;}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+<canvas id="bgCanvas"></canvas>
+<div id="toast"></div>
+
+<!-- ── Header ── -->
+<header>
+  <h1>🎯⚡ 單位圓三角比</h1>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="score-bar">
+    <div class="stat"><div class="val" id="totalScore">0</div><div class="lbl">總分</div></div>
+    <div class="stat"><div class="val" id="streakCount">0</div><div class="lbl">連勝🔥</div></div>
+    <div class="stat"><div class="val" id="correctCount">0</div><div class="lbl">答對✅</div></div>
+  </div>
+  </div>
+</header>
+
+<!-- ── Nav ── -->
+<nav>
+  <button class="active" id="tab1" onclick="switchTab(1)">🌐 單位圓探索</button>
+  <button id="tab2" onclick="switchTab(2)">⚡ 閃電答題</button>
+</nav>
+
+<!-- ════════════════════════════
+     PANEL 1 – Unit Circle
+════════════════════════════ -->
+<div class="panel active" id="panel1">
+  <div class="panel-title">🔵 單位圓互動探索</div>
+  <div class="panel-desc">拖曳圓上的點或點擊特殊角，探索三角函數的幾何意義</div>
+
+  <div class="card" style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- ── Canvas + overlay ── -->
+    <div class="uc-canvas-wrap" style="flex-shrink:0;">
+      <canvas id="uc-canvas" width="460" height="460"></canvas>
+      <!-- HTML overlay for fraction labels on the canvas -->
+      <div id="uc-overlay">
+        <div class="ov-label" id="ov-cos" style="color:#43e97b;"></div>
+        <div class="ov-label" id="ov-sin" style="color:#ff6584;"></div>
+        <div class="ov-label" id="ov-coord" style="color:#eaeaea;font-size:.78rem;border:1px solid rgba(255,255,255,0.18);"></div>
+      </div>
+    </div>
+
+    <!-- ── Right info ── -->
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Current values -->
+      <div id="uc-info" style="background:var(--card2);border-radius:12px;padding:16px;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">當前數值</div>
+        <div class="trig-vals" style="margin-bottom:8px;">
+          <div class="trig-val">
+            <div class="name">角度</div>
+            <div class="num" id="uc-angle" style="color:var(--gold)">45°</div>
+          </div>
+          <div class="trig-val">
+            <div class="name">弧度</div>
+            <div class="num" id="uc-rad" style="color:var(--muted)"></div>
+          </div>
+        </div>
+        <hr style="border-color:#2a2a4a;margin:8px 0;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;height:42px;overflow:hidden;">
+            <span id="lbl-sin" style="color:#ff6584;font-size:.85rem;font-weight:700;white-space:nowrap;min-width:90px;">sin θ =</span>
+            <span id="uc-sin" style="color:#ff6584;font-weight:700;font-size:1rem;display:flex;align-items:center;height:100%;overflow:hidden;">—</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;height:42px;overflow:hidden;">
+            <span id="lbl-cos" style="color:#43e97b;font-size:.85rem;font-weight:700;white-space:nowrap;min-width:90px;">cos θ =</span>
+            <span id="uc-cos" style="color:#43e97b;font-weight:700;font-size:1rem;display:flex;align-items:center;height:100%;overflow:hidden;">—</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;height:42px;overflow:hidden;">
+            <span id="lbl-tan" style="color:#4facfe;font-size:.85rem;font-weight:700;white-space:nowrap;min-width:90px;">tan θ =</span>
+            <span id="uc-tan" style="color:#4facfe;font-weight:700;font-size:1rem;display:flex;align-items:center;height:100%;overflow:hidden;">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Definitions (with display-style fractions via MathJax) -->
+      <div style="background:var(--card2);border-radius:12px;padding:16px;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">定義（單位圓 r = 1）</div>
+        <div class="def-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:14px;height:14px;background:#ff6584;border-radius:3px;flex-shrink:0;"></div>
+          <div class="def-math" style="font-size:.88rem;color:var(--text);flex:1;">
+            <span style="color:#ff6584;font-weight:700;">sin θ</span> \(= \dfrac{y}{r} =\) <strong style="color:#ff6584;">y 座標</strong>
+          </div>
+        </div>
+        <div class="def-row" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:14px;height:14px;background:#43e97b;border-radius:3px;flex-shrink:0;"></div>
+          <div class="def-math" style="font-size:.88rem;color:var(--text);flex:1;">
+            <span style="color:#43e97b;font-weight:700;">cos θ</span> \(= \dfrac{x}{r} =\) <strong style="color:#43e97b;">x 座標</strong>
+          </div>
+        </div>
+        <div class="def-row" style="display:flex;align-items:center;gap:10px;">
+          <div style="width:14px;height:14px;background:#4facfe;border-radius:3px;flex-shrink:0;"></div>
+          <div class="def-math" style="font-size:.88rem;color:var(--text);flex:1;">
+            <span style="color:#4facfe;font-weight:700;">tan θ</span> \(= \dfrac{y}{x} = \dfrac{\sin\theta}{\cos\theta}\)
+          </div>
+        </div>
+      </div>
+
+      <!-- 模式切換 + 控制區 -->
+      <div style="background:var(--card2);border-radius:12px;padding:14px;">
+
+        <!-- ▓▓ 按壓模式面板 ▓▓ -->
+        <div id="press-panel">
+          <!-- Slider row -->
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+            <input type="range" id="uc-slider" min="0" max="360" value="45" style="flex:1;accent-color:var(--primary);">
+            <span style="font-weight:700;color:var(--gold);min-width:38px;text-align:right;" id="uc-deg-label">45°</span>
+            <button class="btn btn-gold" onclick="ucAnimate()" id="uc-anim-btn" style="padding:6px 14px;font-size:.82rem;">▶ 旋轉</button>
+          </div>
+          <!-- Special angle toggle -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.86rem;color:var(--text);user-select:none;">
+              <input type="checkbox" id="uc-special-toggle" style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;">
+              特殊角
+            </label>
+          </div>
+          <!-- Special angle buttons (hidden, kept for compatibility) -->
+          <div style="display:none;flex-wrap:wrap;gap:4px;">
+            <button class="btn btn-primary" onclick="ucSet(0)"   style="padding:5px 9px;font-size:.78rem;">0°</button>
+            <button class="btn btn-primary" onclick="ucSet(30)"  style="padding:5px 9px;font-size:.78rem;">30°</button>
+            <button class="btn btn-primary" onclick="ucSet(45)"  style="padding:5px 9px;font-size:.78rem;">45°</button>
+            <button class="btn btn-primary" onclick="ucSet(60)"  style="padding:5px 9px;font-size:.78rem;">60°</button>
+            <button class="btn btn-primary" onclick="ucSet(90)"  style="padding:5px 9px;font-size:.78rem;">90°</button>
+            <button class="btn btn-primary" onclick="ucSet(120)" style="padding:5px 9px;font-size:.78rem;">120°</button>
+            <button class="btn btn-primary" onclick="ucSet(135)" style="padding:5px 9px;font-size:.78rem;">135°</button>
+            <button class="btn btn-primary" onclick="ucSet(150)" style="padding:5px 9px;font-size:.78rem;">150°</button>
+            <button class="btn btn-primary" onclick="ucSet(180)" style="padding:5px 9px;font-size:.78rem;">180°</button>
+            <button class="btn btn-primary" onclick="ucSet(210)" style="padding:5px 9px;font-size:.78rem;">210°</button>
+            <button class="btn btn-primary" onclick="ucSet(225)" style="padding:5px 9px;font-size:.78rem;">225°</button>
+            <button class="btn btn-primary" onclick="ucSet(240)" style="padding:5px 9px;font-size:.78rem;">240°</button>
+            <button class="btn btn-primary" onclick="ucSet(270)" style="padding:5px 9px;font-size:.78rem;">270°</button>
+            <button class="btn btn-primary" onclick="ucSet(300)" style="padding:5px 9px;font-size:.78rem;">300°</button>
+            <button class="btn btn-primary" onclick="ucSet(315)" style="padding:5px 9px;font-size:.78rem;">315°</button>
+            <button class="btn btn-primary" onclick="ucSet(330)" style="padding:5px 9px;font-size:.78rem;">330°</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- end right -->
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     PANEL 2 – Speed Quiz
+════════════════════════════ -->
+<div class="panel" id="panel2" style="position:relative;z-index:1;">
+  <div class="panel-title">⚡ 閃電特殊角答題</div>
+  <div class="panel-desc">限時挑戰！考驗你的三角函數反應力，連續答對有倍率加成！</div>
+
+  <div class="sq-timer-bar"><div class="sq-timer-fill" id="sqTimerFill"></div></div>
+  <div class="sq-mode-row">
+    <button class="sq-mode-btn active" id="sqMode10" onclick="sqSetMode(10)">📚 10題練習</button>
+    <button class="sq-mode-btn" id="sqMode20" onclick="sqSetMode(20)">🎯 20題挑戰</button>
+    <button class="sq-mode-btn" id="sqModeInf" onclick="sqSetMode(0)">♾️ 無限模式</button>
+  </div>
+  <div class="sq-progress-dots" id="sqDots"></div>
+
+  <div class="sq-panel" id="sqPanel">
+    <!-- Start -->
+    <div id="sqStartWrap">
+      <div class="sq-start-icon">⚡</div>
+      <div class="sq-start-note">每題限時 <strong style="color:#4facfe">10 秒</strong></div>
+      <div class="sq-start-note2">答對 × 連勝倍率，分數共計到頂部總分！</div>
+      <button class="sq-start-btn" onclick="sqStart()">🚀 開始答題</button>
+    </div>
+    <!-- Question -->
+    <div id="sqQWrap" style="display:none;flex-direction:column;align-items:center;width:100%;">
+      <div class="sq-diff-badge easy" id="sqDiffBadge">簡單</div>
+      <div class="sq-question" id="sqQuestionText"></div>
+      <canvas class="sq-mini" id="sqMiniCircle" width="120" height="120"></canvas>
+      <div class="sq-opts" id="sqOpts"></div>
+      <div class="sq-kb-hint">按 1–4 快速選擇</div>
+    </div>
+    <!-- End -->
+    <div class="sq-end-wrap" id="sqEndWrap" style="display:none;">
+      <div style="font-size:2.2em;margin-bottom:6px;" id="sqEndEmoji">🎉</div>
+      <div style="opacity:.65;margin-bottom:4px;">本局成績</div>
+      <div class="sq-final-score" id="sqFinalScore">0</div>
+      <div class="sq-grade" id="sqGrade"></div>
+      <div class="sq-stats-text" id="sqStatsText"></div>
+      <button class="sq-restart-btn" onclick="sqReset()">🔄 再來一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════
+   SHARED STATE & UTILS
+═══════════════════════════════ */
+let sharedScore = 0, sharedStreak = 0, sharedCorrect = 0;
+
+function addSharedScore(pts) { sharedScore += pts; refreshHeader(); }
+function onCorrect() { sharedStreak++; sharedCorrect++; refreshHeader(); }
+function onWrong()   { sharedStreak = 0; refreshHeader(); }
+function refreshHeader() {
+  document.getElementById('totalScore').textContent  = sharedScore;
+  document.getElementById('streakCount').textContent = sharedStreak;
+  document.getElementById('correctCount').textContent= sharedCorrect;
+}
+
+/* Tab switch */
+function switchTab(n) {
+  document.getElementById('panel1').classList.toggle('active', n===1);
+  document.getElementById('panel2').classList.toggle('active', n===2);
+  document.getElementById('tab1').classList.toggle('active', n===1);
+  document.getElementById('tab2').classList.toggle('active', n===2);
+  document.getElementById('bgCanvas').classList.toggle('show', n===2);
+  if (n===2 && !sqBgStarted){ sqBgStarted=true; sqAnimBG(); }
+  if (n===1) ucDrawAll(ucDeg);
+}
+
+/* Toast */
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* Confetti */
+const cc=document.getElementById('confetti-canvas');
+const ccCtx=cc.getContext('2d');
+let confPieces=[];
+function launchConfetti(){
+  cc.width=window.innerWidth; cc.height=window.innerHeight;
+  for(let i=0;i<55;i++) confPieces.push({
+    x:Math.random()*cc.width,y:-10,
+    vx:(Math.random()-.5)*4,vy:Math.random()*4+2,
+    color:['#6c63ff','#ff6584','#43e97b','#f7971e','#38f9d7'][Math.floor(Math.random()*5)],
+    size:Math.random()*8+4,rot:Math.random()*360,rspd:(Math.random()-.5)*6
+  });
+  requestAnimationFrame(animConf);
+}
+function animConf(){
+  ccCtx.clearRect(0,0,cc.width,cc.height);
+  confPieces=confPieces.filter(p=>p.y<cc.height+20);
+  confPieces.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.rot+=p.rspd;
+    ccCtx.save();ccCtx.translate(p.x,p.y);ccCtx.rotate(p.rot*Math.PI/180);
+    ccCtx.fillStyle=p.color;ccCtx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+    ccCtx.restore();
+  });
+  if(confPieces.length) requestAnimationFrame(animConf);
+}
+
+/* Popup float */
+function showPopup(text,color){
+  const el=document.createElement('div');
+  el.className='popup-anim';el.textContent=text;el.style.color=color;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+
+/* Achievement check */
+function checkAchievements(){
+  if(sharedCorrect===1) showToast('🌟 踏出第一步！');
+  else if(sharedStreak===5) showToast('🔥 5連勝！超強！');
+  else if(sharedStreak===10) showToast('💥 10連勝！三角函數大師！');
+  else if(sharedScore>=100&&sharedScore-100<15) showToast('🏆 破百分！');
+  else if(sharedScore>=300&&sharedScore-300<30) showToast('💎 300分達成！');
+}
+
+/* ═══════════════════════════════
+   EXACT VALUES TABLE
+═══════════════════════════════ */
+/* All fractions use \dfrac for display-style (tall) rendering */
+function mjSet(idOrEl,tex){
+  const el=typeof idOrEl==='string'?document.getElementById(idOrEl):idOrEl;
+  if(!el) return;
+  el.innerHTML='\\(\\displaystyle '+tex+'\\)';
+  if(window.MathJax) MathJax.typesetPromise([el]).catch(()=>{});
+}
+
+/* Use \dfrac everywhere so fractions are tall and beautiful */
+const ucExact={
+  sin:{
+    0:'0',          30:'\\dfrac{1}{2}',         45:'\\dfrac{\\sqrt{2}}{2}',
+    60:'\\dfrac{\\sqrt{3}}{2}',                  90:'1',
+    120:'\\dfrac{\\sqrt{3}}{2}',                 135:'\\dfrac{\\sqrt{2}}{2}',
+    150:'\\dfrac{1}{2}',                          180:'0',
+    210:'-\\dfrac{1}{2}',                         225:'-\\dfrac{\\sqrt{2}}{2}',
+    240:'-\\dfrac{\\sqrt{3}}{2}',                 270:'-1',
+    300:'-\\dfrac{\\sqrt{3}}{2}',                 315:'-\\dfrac{\\sqrt{2}}{2}',
+    330:'-\\dfrac{1}{2}',                          360:'0'
+  },
+  cos:{
+    0:'1',           30:'\\dfrac{\\sqrt{3}}{2}', 45:'\\dfrac{\\sqrt{2}}{2}',
+    60:'\\dfrac{1}{2}',                           90:'0',
+    120:'-\\dfrac{1}{2}',                         135:'-\\dfrac{\\sqrt{2}}{2}',
+    150:'-\\dfrac{\\sqrt{3}}{2}',                 180:'-1',
+    210:'-\\dfrac{\\sqrt{3}}{2}',                 225:'-\\dfrac{\\sqrt{2}}{2}',
+    240:'-\\dfrac{1}{2}',                         270:'0',
+    300:'\\dfrac{1}{2}',                          315:'\\dfrac{\\sqrt{2}}{2}',
+    330:'\\dfrac{\\sqrt{3}}{2}',                  360:'1'
+  },
+  tan:{
+    0:'0',           30:'\\dfrac{\\sqrt{3}}{3}', 45:'1',
+    60:'\\sqrt{3}',                               90:'\\text{無定義}',
+    120:'-\\sqrt{3}',                             135:'-1',
+    150:'-\\dfrac{\\sqrt{3}}{3}',                 180:'0',
+    210:'\\dfrac{\\sqrt{3}}{3}',                  225:'1',
+    240:'\\sqrt{3}',                              270:'\\text{無定義}',
+    300:'-\\sqrt{3}',                             315:'-1',
+    330:'-\\dfrac{\\sqrt{3}}{3}',                  360:'0'
+  }
+};
+
+const ucRadMap={
+  0:'0',           30:'\\dfrac{\\pi}{6}',        45:'\\dfrac{\\pi}{4}',
+  60:'\\dfrac{\\pi}{3}',                         90:'\\dfrac{\\pi}{2}',
+  120:'\\dfrac{2\\pi}{3}',                       135:'\\dfrac{3\\pi}{4}',
+  150:'\\dfrac{5\\pi}{6}',                       180:'\\pi',
+  210:'\\dfrac{7\\pi}{6}',                       225:'\\dfrac{5\\pi}{4}',
+  240:'\\dfrac{4\\pi}{3}',                       270:'\\dfrac{3\\pi}{2}',
+  300:'\\dfrac{5\\pi}{3}',                       315:'\\dfrac{7\\pi}{4}',
+  330:'\\dfrac{11\\pi}{6}',                      360:'2\\pi'
+};
+
+/* ═══════════════════════════════
+   GAME 1 – UNIT CIRCLE
+═══════════════════════════════ */
+const ucCanvas=document.getElementById('uc-canvas');
+const ucCtx=ucCanvas.getContext('2d');
+const UCW=460,UCH=460,UCCX=230,UCCY=230,UCR=175;
+let ucDeg=45,ucAnimRunning=false,ucAnimId;
+let ucSpecialMode=false;
+
+const SPECIAL_DEGS=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330];
+const SPECIAL_DEGS_360=[...SPECIAL_DEGS,360];
+
+/* Snap a (possibly fractional) degree to the nearest special angle, wrapping 360→0 */
+function snapToSpecial(deg){
+  let d=((deg%360)+360)%360;
+  let closest=SPECIAL_DEGS[0],minDiff=360;
+  SPECIAL_DEGS.forEach(sd=>{
+    let diff=Math.abs(d-sd);
+    diff=Math.min(diff,360-diff);
+    if(diff<minDiff){minDiff=diff;closest=sd;}
+  });
+  return closest;
+}
+
+/* Step to the previous/next special angle relative to current ucDeg */
+function stepSpecial(dir){
+  const cur=snapToSpecial(ucDeg);
+  const idx=SPECIAL_DEGS.indexOf(cur);
+  const n=SPECIAL_DEGS.length;
+  const next=SPECIAL_DEGS[(idx+dir+n)%n];
+  return next;
+}
+
+document.getElementById('uc-special-toggle').addEventListener('change',e=>{
+  ucSpecialMode=e.target.checked;
+  if(ucSpecialMode){
+    ucDeg=snapToSpecial(ucDeg);
+    document.getElementById('uc-slider').value=ucDeg;
+    ucDrawAll(ucDeg);
+  }
+});
+
+function ucPt(deg){
+  const r=deg*Math.PI/180;
+  return{x:UCCX+UCR*Math.cos(r),y:UCCY-UCR*Math.sin(r)};
+}
+
+/* Convert canvas px to overlay %-based position */
+function canvasPxToOverlayPct(cx,cy){
+  // uc-canvas is max-width:100%, aspect 1:1 → offsetWidth == offsetHeight
+  const el=ucCanvas;
+  const pct_x=(cx/UCW*100)+'%';
+  const pct_y=(cy/UCH*100)+'%';
+  return{x:pct_x,y:pct_y};
+}
+
+/* Update the HTML overlay labels with MathJax fractions */
+function updateOverlay(deg){
+  const rad=deg*Math.PI/180;
+  const sinV=Math.sin(rad),cosV=Math.cos(rad);
+  const px=UCCX+UCR*cosV;
+  const py=UCCY-UCR*sinV;
+
+  const snapAngles=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330,360];
+  const snapped=snapAngles.includes(deg)?deg:null;
+
+  // ── cos label (always below the x-axis, so it never overlaps the orange angle arc/label near the origin) ──
+  const cosEl=document.getElementById('ov-cos');
+  let cosMidX=(UCCX+px)/2;
+  // When the point sits near the y-axis (cos≈0), the midpoint collapses near the
+  // origin where the orange angle arc lives — nudge horizontally to clear it.
+  if(Math.abs(px-UCCX)<30){
+    cosMidX = UCCX + (sinV>=0 ? 36 : -36);
+  }
+  const cosLabelY = UCCY + 22;   // always below the x-axis
+  const cosPct=canvasPxToOverlayPct(cosMidX, cosLabelY);
+  cosEl.style.left=cosPct.x;cosEl.style.top=cosPct.y;
+  if(snapped!=null){
+    cosEl.innerHTML='\\(\\small\\color{#43e97b}{\\cos=}\\displaystyle '+ucExact.cos[snapped]+'\\)';
+  } else {
+    cosEl.innerHTML='<span style="color:#43e97b">cos='+cosV.toFixed(3)+'</span>';
+  }
+
+  // ── sin label (beside vertical mid-point, pushed well clear of the circle) ──
+  const sinEl=document.getElementById('ov-sin');
+  // Place on the outer side of the point's x-position, with a larger offset
+  const sinOffset = 50;
+  const sinMidX= px>=UCCX ? px+sinOffset : px-sinOffset;
+  const sinMidY=(UCCY+py)/2;
+  const sinPct=canvasPxToOverlayPct(sinMidX,sinMidY);
+  sinEl.style.left=sinPct.x;sinEl.style.top=sinPct.y;
+  if(snapped!=null){
+    sinEl.innerHTML='\\(\\small\\color{#ff6584}{\\sin=}\\displaystyle '+ucExact.sin[snapped]+'\\)';
+  } else {
+    sinEl.innerHTML='<span style="color:#ff6584">sin='+sinV.toFixed(3)+'</span>';
+  }
+
+  // ── coordinate label outside the circle along radius direction ──
+  // Place it BEYOND the circle point along the outward normal,
+  // so it never sits on the circumference or inside the circle.
+  const coordEl=document.getElementById('ov-coord');
+  const normX=cosV, normY=-sinV; // outward unit vector (canvas y-flipped)
+  // Estimated half-sizes of the label box (px in canvas coords)
+  const LW=62, LH=20;
+  // Push label centre far enough outside the point so the label edge
+  // clears the circumference. We want: dist(centre, origin) > UCR + margin
+  // dist of point from centre = UCR, so we need extra = LW/2 + 14
+  const OUTER = LW/2 + 18; // px beyond the point (circle edge)
+  let clx = px + normX * OUTER;
+  let cly = py + normY * OUTER;
+  // Additionally ensure the nearest label edge doesn't re-enter the circle:
+  // if the label is still too close, nudge further
+  const distFromCentre = Math.sqrt((clx-UCCX)**2+(cly-UCCY)**2);
+  const minDist = UCR + LH/2 + 8;
+  if(distFromCentre < minDist){
+    const scale = minDist / distFromCentre;
+    clx = UCCX + (clx-UCCX)*scale;
+    cly = UCCY + (cly-UCCY)*scale;
+  }
+  // Clamp within canvas area with padding for label size
+  clx=Math.max(LW/2+4, Math.min(UCW-LW/2-4, clx));
+  cly=Math.max(LH/2+4, Math.min(UCH-LH/2-4, cly));
+  const coordPct=canvasPxToOverlayPct(clx,cly);
+  coordEl.style.left=coordPct.x;coordEl.style.top=coordPct.y;
+  if(snapped!=null){
+    const cosT=ucExact.cos[snapped];
+    const sinT=ucExact.sin[snapped];
+    coordEl.innerHTML='\\(\\scriptstyle(\\displaystyle'+cosT+',\\,\\displaystyle'+sinT+'\\scriptstyle)\\)';
+  } else {
+    coordEl.innerHTML='('+cosV.toFixed(3)+', '+sinV.toFixed(3)+')';
+  }
+
+  // Typeset all overlay labels
+  if(window.MathJax){
+    MathJax.typesetPromise([cosEl,sinEl,coordEl]).catch(()=>{});
+  }
+}
+
+function ucDrawAll(deg){
+  const rad=deg*Math.PI/180;
+  const sinV=Math.sin(rad),cosV=Math.cos(rad),tanV=Math.tan(rad);
+  const px=UCCX+UCR*cosV;
+  const py=UCCY-UCR*sinV;
+
+  ucCtx.clearRect(0,0,UCW,UCH);
+
+  // Background
+  ucCtx.fillStyle='#0a1628'; ucCtx.fillRect(0,0,UCW,UCH);
+
+  // Subtle grid
+  ucCtx.strokeStyle='rgba(255,255,255,0.04)';ucCtx.lineWidth=1;
+  for(let i=-3;i<=3;i++){
+    ucCtx.beginPath();ucCtx.moveTo(UCCX+i*58,10);ucCtx.lineTo(UCCX+i*58,UCH-10);ucCtx.stroke();
+    ucCtx.beginPath();ucCtx.moveTo(10,UCCY+i*58);ucCtx.lineTo(UCW-10,UCCY+i*58);ucCtx.stroke();
+  }
+
+  // Axes
+  ucCtx.strokeStyle='rgba(255,255,255,0.25)';ucCtx.lineWidth=1.5;
+  ucCtx.beginPath();ucCtx.moveTo(12,UCCY);ucCtx.lineTo(UCW-12,UCCY);ucCtx.stroke();
+  ucCtx.beginPath();ucCtx.moveTo(UCCX,12);ucCtx.lineTo(UCCX,UCH-12);ucCtx.stroke();
+  ucCtx.fillStyle='rgba(255,255,255,0.25)';
+  ucCtx.beginPath();ucCtx.moveTo(UCW-10,UCCY);ucCtx.lineTo(UCW-16,UCCY-4);ucCtx.lineTo(UCW-16,UCCY+4);ucCtx.fill();
+  ucCtx.beginPath();ucCtx.moveTo(UCCX,10);ucCtx.lineTo(UCCX-4,16);ucCtx.lineTo(UCCX+4,16);ucCtx.fill();
+  ucCtx.fillStyle='rgba(255,255,255,0.35)';ucCtx.font='13px Segoe UI';
+  ucCtx.fillText('x',UCW-10,UCCY-8);ucCtx.fillText('y',UCCX+8,14);
+  ucCtx.fillStyle='#5a6a8a';ucCtx.font='11px Segoe UI';
+  ucCtx.fillText('1', UCCX+UCR+4,UCCY-6);ucCtx.fillText('-1',UCCX-UCR-20,UCCY-6);
+  ucCtx.fillText('1', UCCX+5,UCCY-UCR-4);ucCtx.fillText('-1',UCCX+5,UCCY+UCR+12);
+
+  ucCtx.font='11px Segoe UI';ucCtx.fillStyle='#2a3a5a';
+  ucCtx.fillText('I',  UCCX+90,UCCY-90);ucCtx.fillText('II', UCCX-110,UCCY-90);
+  ucCtx.fillText('III',UCCX-118,UCCY+100);ucCtx.fillText('IV', UCCX+82,UCCY+100);
+
+  // Special angle radii + dots
+  SPECIAL_DEGS.forEach(sd=>{
+    const sr=sd*Math.PI/180;
+    const spx=UCCX+UCR*Math.cos(sr);
+    const spy=UCCY-UCR*Math.sin(sr);
+    ucCtx.strokeStyle='rgba(176,106,255,0.18)';ucCtx.lineWidth=1;
+    ucCtx.beginPath();ucCtx.moveTo(UCCX,UCCY);ucCtx.lineTo(spx,spy);ucCtx.stroke();
+    const isActive=(sd===deg);
+    ucCtx.beginPath();ucCtx.arc(spx,spy,isActive?0:4,0,Math.PI*2);
+    ucCtx.fillStyle=isActive?'transparent':'rgba(176,106,255,0.55)';
+    ucCtx.fill();
+  });
+
+  // Unit circle
+  ucCtx.strokeStyle='rgba(176,106,255,0.5)';ucCtx.lineWidth=2;
+  ucCtx.beginPath();ucCtx.arc(UCCX,UCCY,UCR,0,2*Math.PI);ucCtx.stroke();
+
+  // Angle arc
+  ucCtx.strokeStyle='rgba(247,151,30,0.9)';ucCtx.lineWidth=2.5;
+  ucCtx.beginPath();ucCtx.arc(UCCX,UCCY,32,0,-rad,rad>0);ucCtx.stroke();
+  ucCtx.strokeStyle='rgba(247,151,30,0.3)';ucCtx.lineWidth=1;
+  ucCtx.beginPath();ucCtx.moveTo(UCCX,UCCY);ucCtx.lineTo(UCCX+37,UCCY);ucCtx.stroke();
+  ucCtx.fillStyle='#f7971e';ucCtx.font='bold 13px Segoe UI';
+  const midA=-rad/2;
+  // Place label along bisector, outside the arc (arc r=32, label at r=58)
+  // For near-zero angles keep a minimum offset so it doesn't sit on the base line
+  const labelR = deg < 15 ? 68 : 58;
+  const lx = UCCX + labelR * Math.cos(midA);
+  const ly = UCCY + labelR * Math.sin(midA);
+  ucCtx.textAlign = 'center';
+  ucCtx.textBaseline = 'middle';
+  ucCtx.fillText('θ='+deg+'°', lx, ly);
+  ucCtx.textAlign = 'left';
+  ucCtx.textBaseline = 'alphabetic';
+
+  // cos line (GREEN)
+  ucCtx.strokeStyle='#43e97b';ucCtx.lineWidth=2.5;
+  ucCtx.beginPath();ucCtx.moveTo(UCCX,UCCY);ucCtx.lineTo(px,UCCY);ucCtx.stroke();
+
+  // sin line (RED)
+  ucCtx.strokeStyle='#ff6584';ucCtx.lineWidth=2.5;
+  ucCtx.beginPath();ucCtx.moveTo(px,UCCY);ucCtx.lineTo(px,py);ucCtx.stroke();
+
+  // Radius (PURPLE)
+  ucCtx.strokeStyle='#b06aff';ucCtx.lineWidth=3;
+  ucCtx.beginPath();ucCtx.moveTo(UCCX,UCCY);ucCtx.lineTo(px,py);ucCtx.stroke();
+
+  // Tan dashed
+  if(Math.abs(cosV)>0.05){
+    const tl=Math.min(Math.abs(tanV)*UCR,200);
+    const ty=UCCY-Math.sign(sinV)*tl;
+    ucCtx.strokeStyle='rgba(79,172,254,0.3)';ucCtx.lineWidth=1.5;
+    ucCtx.setLineDash([5,4]);
+    ucCtx.beginPath();ucCtx.moveTo(UCCX+UCR,UCCY);ucCtx.lineTo(UCCX+UCR,ty);ucCtx.stroke();
+    ucCtx.setLineDash([]);
+  }
+
+  // Active point dot
+  const pg=ucCtx.createRadialGradient(px,py,0,px,py,9);
+  pg.addColorStop(0,'#ffffff');pg.addColorStop(1,'#b06aff');
+  ucCtx.beginPath();ucCtx.arc(px,py,7,0,Math.PI*2);
+  ucCtx.fillStyle=pg;ucCtx.fill();
+  ucCtx.strokeStyle='#fff';ucCtx.lineWidth=1.5;
+  ucCtx.beginPath();ucCtx.arc(px,py,7,0,Math.PI*2);ucCtx.stroke();
+
+  // ── Update info panel (right side) ──
+  document.getElementById('uc-deg-label').textContent=deg+'°';
+  document.getElementById('uc-angle').textContent=deg+'°';
+  document.getElementById('lbl-sin').textContent='sin '+deg+'° =';
+  document.getElementById('lbl-cos').textContent='cos '+deg+'° =';
+  document.getElementById('lbl-tan').textContent='tan '+deg+'° =';
+
+  const snapAngles=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330,360];
+  const snapped=snapAngles.includes(deg)?deg:null;
+  if(snapped!=null){
+    mjSet('uc-rad',ucRadMap[snapped]);
+    mjSet('uc-sin',ucExact.sin[snapped]);
+    mjSet('uc-cos',ucExact.cos[snapped]);
+    mjSet('uc-tan',ucExact.tan[snapped]);
+  } else {
+    mjSet('uc-rad',(deg*Math.PI/180).toFixed(4)+'\\text{ rad}');
+    mjSet('uc-sin',sinV.toFixed(4));
+    mjSet('uc-cos',cosV.toFixed(4));
+    mjSet('uc-tan',Math.abs(cosV)<.001?'\\text{無定義}':tanV.toFixed(4));
+  }
+
+  // ── Update HTML overlay labels ──
+  updateOverlay(deg);
+}
+
+/* Slider */
+document.getElementById('uc-slider').addEventListener('input',e=>{
+  let v=+e.target.value;
+  if(ucSpecialMode){
+    const dir = v>ucDeg ? 1 : (v<ucDeg ? -1 : 0);
+    if(dir!==0){
+      v = (dir>0) ? stepSpecial(1) : stepSpecial(-1);
+    } else {
+      v = snapToSpecial(ucDeg);
+    }
+    e.target.value=v;
+  }
+  ucDeg=v; ucDrawAll(ucDeg);
+});
+
+/* Mouse: drag + click special angles */
+ucCanvas.addEventListener('mousedown',e=>{ if(ucAnimRunning)return; handleUCPointer(e.clientX,e.clientY); });
+ucCanvas.addEventListener('mousemove',e=>{ if(ucAnimRunning||!(e.buttons&1))return; handleUCPointer(e.clientX,e.clientY,true); });
+ucCanvas.addEventListener('click',    e=>{ if(ucAnimRunning)return; handleUCPointer(e.clientX,e.clientY); });
+
+function handleUCPointer(cx,cy,isDrag=false){
+  const r=ucCanvas.getBoundingClientRect();
+  const sc=UCW/ucCanvas.offsetWidth;
+  const mx=(cx-r.left)*sc-UCCX;
+  const my=UCCY-(cy-r.top)*sc;
+  const dist=Math.sqrt(mx*mx+my*my);
+  if(!isDrag){
+    let closest=null,minD=18;
+    SPECIAL_DEGS.forEach(sd=>{
+      const sr=sd*Math.PI/180;
+      const spx=UCR*Math.cos(sr),spy=UCR*Math.sin(sr);
+      const d=Math.sqrt((mx-spx)**2+(my-spy)**2);
+      if(d<minD){minD=d;closest=sd;}
+    });
+    if(closest!==null){ucSet(closest);return;}
+  }
+  if(dist>20){
+    let a=Math.round(Math.atan2(my,mx)*180/Math.PI);
+    if(a<0) a+=360;
+    if(ucSpecialMode){
+      a=snapToSpecial(a);
+    }
+    ucDeg=a;
+    document.getElementById('uc-slider').value=a;
+    ucDrawAll(a);
+  }
+}
+
+ucCanvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  const r=ucCanvas.getBoundingClientRect();
+  const sc=UCW/ucCanvas.offsetWidth;
+  const mx=(e.touches[0].clientX-r.left)*sc-UCCX;
+  const my=UCCY-(e.touches[0].clientY-r.top)*sc;
+  let a=Math.round(Math.atan2(my,mx)*180/Math.PI);
+  if(a<0) a+=360;
+  if(ucSpecialMode){
+    a=snapToSpecial(a);
+  }
+  ucDeg=a;
+  document.getElementById('uc-slider').value=a;
+  ucDrawAll(a);
+},{passive:false});
+
+ucCanvas.addEventListener('mousemove',e=>{
+  if(ucAnimRunning)return;
+  const r=ucCanvas.getBoundingClientRect();
+  const sc=UCW/ucCanvas.offsetWidth;
+  const mx=(e.clientX-r.left)*sc-UCCX;
+  const my=UCCY-(e.clientY-r.top)*sc;
+  let near=SPECIAL_DEGS.some(sd=>{
+    const sr=sd*Math.PI/180;
+    return Math.sqrt((mx-UCR*Math.cos(sr))**2+(my-UCR*Math.sin(sr))**2)<18;
+  });
+  ucCanvas.style.cursor=near?'pointer':'crosshair';
+});
+
+function ucSet(d){
+  cancelAnimationFrame(ucAnimId);ucAnimRunning=false;
+  document.getElementById('uc-anim-btn').textContent='▶ 旋轉';
+  ucDeg=d;
+  document.getElementById('uc-slider').value=d;
+  ucDrawAll(d);
+}
+
+function ucAnimate(){
+  if(ucAnimRunning){
+    ucAnimRunning=false;cancelAnimationFrame(ucAnimId);
+    document.getElementById('uc-anim-btn').textContent='▶ 旋轉';
+    return;
+  }
+  ucAnimRunning=true;
+  document.getElementById('uc-anim-btn').textContent='⏹ 停止';
+  let t=ucDeg,last=0;
+  function step(ts){
+    if(!ucAnimRunning)return;
+    const interval=ucSpecialMode?1200:40;
+    if(ts-last>=interval){
+      if(ucSpecialMode){
+        t=stepSpecial(1);
+      } else {
+        t=(t+1)%360;
+      }
+      ucDeg=t;
+      document.getElementById('uc-slider').value=t;
+      ucDrawAll(t);last=ts;
+    }
+    ucAnimId=requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+ucDrawAll(45);
+
+/* ═══════════════════════════════
+   GAME 2 – SPEED QUIZ
+═══════════════════════════════ */
+const bgCanvas=document.getElementById('bgCanvas');
+const bgCtx=bgCanvas.getContext('2d');
+bgCanvas.width=window.innerWidth;bgCanvas.height=window.innerHeight;
+const bgParts=Array.from({length:28},()=>({
+  x:Math.random()*bgCanvas.width,y:Math.random()*bgCanvas.height,
+  vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+  r:Math.random()*2+.5,o:Math.random()*.22+.05
+}));
+let sqBgStarted=false;
+function sqAnimBG(){
+  bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  bgParts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>bgCanvas.width)p.vx*=-1;
+    if(p.y<0||p.y>bgCanvas.height)p.vy*=-1;
+    bgCtx.beginPath();bgCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bgCtx.fillStyle=`rgba(79,172,254,${p.o})`;bgCtx.fill();
+  });
+  requestAnimationFrame(sqAnimBG);
+}
+
+/* All quiz answer options use \dfrac for display-style fractions */
+const SQ_SPECIAL={
+  0:[0,1,0],     30:[.5,Math.sqrt(3)/2,1/Math.sqrt(3)],   45:[Math.sqrt(2)/2,Math.sqrt(2)/2,1],
+  60:[Math.sqrt(3)/2,.5,Math.sqrt(3)],                     90:[1,0,null],
+  120:[Math.sqrt(3)/2,-.5,-Math.sqrt(3)],                  135:[Math.sqrt(2)/2,-Math.sqrt(2)/2,-1],
+  150:[.5,-Math.sqrt(3)/2,-1/Math.sqrt(3)],                180:[0,-1,0],
+  210:[-.5,-Math.sqrt(3)/2,1/Math.sqrt(3)],                225:[-Math.sqrt(2)/2,-Math.sqrt(2)/2,1],
+  240:[-Math.sqrt(3)/2,-.5,Math.sqrt(3)],                  270:[-1,0,null],
+  300:[-Math.sqrt(3)/2,.5,-Math.sqrt(3)],                  315:[-Math.sqrt(2)/2,Math.sqrt(2)/2,-1],
+  330:[-.5,Math.sqrt(3)/2,-1/Math.sqrt(3)],                360:[0,1,0]
+};
+
+/* Display-style fractions for quiz options */
+const SQ_FRAC={
+  '0':   '0',
+  '1':   '1',
+  '-1':  '-1',
+  '0.5': '\\dfrac{1}{2}',
+  '-0.5':'-\\dfrac{1}{2}',
+  '0.866':'\\dfrac{\\sqrt{3}}{2}',
+  '-0.866':'-\\dfrac{\\sqrt{3}}{2}',
+  '0.707':'\\dfrac{\\sqrt{2}}{2}',
+  '-0.707':'-\\dfrac{\\sqrt{2}}{2}',
+  '1.732':'\\sqrt{3}',
+  '-1.732':'-\\sqrt{3}',
+  '0.577':'\\dfrac{\\sqrt{3}}{3}',
+  '-0.577':'-\\dfrac{\\sqrt{3}}{3}'
+};
+/* Always return exact fraction; for special angles this will always match */
+function sqFrac(v){
+  if(v===null) return '未定義';
+  const key=v.toFixed(3);
+  if(SQ_FRAC[key]!==undefined) return SQ_FRAC[key];
+  /* Fallback: try rounding to 2 decimals for edge cases */
+  const key2=v.toFixed(2);
+  const fallbackMap={'0.00':'0','1.00':'1','-1.00':'-1','0.50':'\\dfrac{1}{2}','-0.50':'-\\dfrac{1}{2}'};
+  return fallbackMap[key2]||SQ_FRAC[key2]||'未定義';
+}
+const sqAngles=Object.keys(SQ_SPECIAL).map(Number);
+const sqFuncs=['sin','cos','tan'];
+let sqMode=10,sqQuestions=[],sqIdx=0,sqTimer=null,sqTimeLeft=0,sqAnswered=false;
+let sqLocalScore=0;
+const SQ_TIME=10;
+
+function sqSetMode(m){
+  sqMode=m;
+  ['10','20','Inf'].forEach(n=>document.getElementById('sqMode'+n).classList.remove('active'));
+  document.getElementById('sqMode'+(m||'Inf')).classList.add('active');
+}
+
+function sqGenQ(){
+  const a=sqAngles[Math.floor(Math.random()*sqAngles.length)];
+  const vals=SQ_SPECIAL[a];
+  let fn,ans;
+  for(let i=0;i<10;i++){
+    fn=sqFuncs[Math.floor(Math.random()*sqFuncs.length)];
+    const v=fn==='sin'?vals[0]:fn==='cos'?vals[1]:vals[2];
+    if(v!==null){ans=v;break;}
+  }
+  if(ans===null)return sqGenQ();
+  const correct=sqFrac(ans);
+  const pool=new Set([correct]);
+  while(pool.size<4){
+    const ra=sqAngles[Math.floor(Math.random()*sqAngles.length)];
+    const rv=SQ_SPECIAL[ra][sqFuncs.indexOf(fn)];
+    if(rv!==null)pool.add(sqFrac(rv));
+  }
+  const opts=[...pool].sort(()=>Math.random()-.5);
+  const diff=a%90===0?'easy':(a%30===0&&a%60!==0)?'medium':'hard';
+  return{a,fn,correct,opts,diff};
+}
+
+function sqStart(){
+  const n=sqMode||999;
+  sqQuestions=Array.from({length:n},()=>sqGenQ());
+  sqIdx=0;sqLocalScore=0;
+  document.getElementById('sqStartWrap').style.display='none';
+  document.getElementById('sqEndWrap').style.display='none';
+  const qw=document.getElementById('sqQWrap');
+  qw.style.display='flex';
+  sqBuildDots();sqShowQ();
+}
+
+function sqBuildDots(){
+  const el=document.getElementById('sqDots');el.innerHTML='';
+  if(sqMode===0)return;
+  sqQuestions.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='sq-dot'+(i===0?' cur':'');d.id='sqDot'+i;
+    el.appendChild(d);
+  });
+}
+
+function sqUpdateDot(idx,ok){
+  const d=document.getElementById('sqDot'+idx);
+  if(d) d.className='sq-dot '+(ok?'ok':'ng');
+  const nd=document.getElementById('sqDot'+(idx+1));
+  if(nd) nd.className='sq-dot cur';
+}
+
+function sqShowQ(){
+  if(sqMode>0&&sqIdx>=sqQuestions.length){sqEnd();return;}
+  sqAnswered=false;
+  const cur=sqMode===0?(sqQuestions[0]=sqGenQ()):sqQuestions[sqIdx];
+  const badges={easy:'簡單 🟢',medium:'普通 🟡',hard:'困難 🔴'};
+  const bd=document.getElementById('sqDiffBadge');
+  bd.textContent=badges[cur.diff];bd.className='sq-diff-badge '+cur.diff;
+  const fnTex=cur.fn==='sin'?'\\sin':cur.fn==='cos'?'\\cos':'\\tan';
+  const qEl=document.getElementById('sqQuestionText');
+  qEl.innerHTML='\\(\\displaystyle '+fnTex+'\\,'+cur.a+'^\\circ\\) = ?';
+  if(window.MathJax)MathJax.typesetPromise([qEl]).catch(()=>{});
+  sqDrawMini(cur.a);
+  const optsEl=document.getElementById('sqOpts');optsEl.innerHTML='';
+  cur.opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='sq-opt';
+    btn.dataset.val=o;
+    /* Use \displaystyle so dfrac renders properly inside button */
+    btn.innerHTML='\\(\\displaystyle '+o+'\\)';
+    btn.onclick=()=>sqChoose(o,cur,btn);
+    optsEl.appendChild(btn);
+  });
+  if(window.MathJax)MathJax.typesetPromise([optsEl]).catch(()=>{});
+  sqStartTimer();
+}
+
+function sqDrawMini(deg){
+  const c=document.getElementById('sqMiniCircle');
+  const x=c.getContext('2d');
+  const cx=60,cy=60,r=45;
+  x.clearRect(0,0,120,120);
+  x.fillStyle='#0f3460';x.fillRect(0,0,120,120);
+  x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=1.5;
+  x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.stroke();
+  x.strokeStyle='rgba(255,255,255,.25)';
+  x.beginPath();x.moveTo(10,cy);x.lineTo(110,cy);x.stroke();
+  x.beginPath();x.moveTo(cx,10);x.lineTo(cx,110);x.stroke();
+  const rad=deg*Math.PI/180;
+  const px=cx+r*Math.cos(rad),py=cy-r*Math.sin(rad);
+  x.strokeStyle='rgba(247,151,30,.8)';x.lineWidth=2;
+  x.beginPath();x.arc(cx,cy,16,0,-rad,rad>0);x.stroke();
+  x.beginPath();x.moveTo(cx,cy);x.lineTo(px,py);
+  x.strokeStyle='#43e97b';x.lineWidth=2;x.stroke();
+  x.beginPath();x.arc(px,py,5,0,Math.PI*2);
+  x.fillStyle='#f093fb';x.fill();
+  x.fillStyle='rgba(255,255,255,.75)';x.font='bold 11px Segoe UI';
+  x.fillText(deg+'°',cx+5,cy-5);
+  c.style.display='block';
+}
+
+function sqStartTimer(){
+  clearInterval(sqTimer);sqTimeLeft=SQ_TIME;
+  const fill=document.getElementById('sqTimerFill');
+  sqTimer=setInterval(()=>{
+    sqTimeLeft-=.1;
+    const pct=Math.max(0,sqTimeLeft/SQ_TIME*100);
+    fill.style.width=pct+'%';
+    fill.style.background=`hsl(${pct>50?120:pct>25?60:0},100%,60%)`;
+    if(sqTimeLeft<=0){clearInterval(sqTimer);sqTimeout();}
+  },100);
+}
+
+function sqTimeout(){
+  if(sqAnswered)return;sqAnswered=true;
+  const cur=sqMode===0?sqQuestions[0]:sqQuestions[sqIdx];
+  document.querySelectorAll('.sq-opt').forEach(b=>{if(b.dataset.val===cur.correct)b.classList.add('reveal');});
+  onWrong();showPopup('⏰ 時間到！','#ff6464');
+  if(sqMode>0)sqUpdateDot(sqIdx,false);
+  setTimeout(()=>{if(sqMode>0){sqIdx++;if(sqIdx>=sqQuestions.length){sqEnd();return;}}sqShowQ();},1500);
+}
+
+function sqChoose(val,q,btn){
+  if(sqAnswered)return;sqAnswered=true;
+  clearInterval(sqTimer);
+  if(val===q.correct){
+    btn.classList.add('correct');
+    onCorrect();
+    const bonus=sharedStreak>1?` 🔥×${sharedStreak}`:'';
+    const pts=10*(sharedStreak>1?Math.min(sharedStreak,5):1);
+    sqLocalScore+=pts;addSharedScore(pts);
+    showPopup(`+${pts}${bonus}`,'#64ff96');
+    checkAchievements();
+    if(sqMode>0)sqUpdateDot(sqIdx,true);
+  } else {
+    btn.classList.add('wrong');onWrong();
+    document.querySelectorAll('.sq-opt').forEach(b=>{if(b.dataset.val===q.correct)b.classList.add('reveal');});
+    showPopup('❌','#ff6464');
+    if(sqMode>0)sqUpdateDot(sqIdx,false);
+  }
+  setTimeout(()=>{
+    if(sqMode>0){sqIdx++;if(sqIdx>=sqQuestions.length){sqEnd();return;}}
+    sqShowQ();
+  },1200);
+}
+
+function sqEnd(){
+  clearInterval(sqTimer);
+  document.getElementById('sqQWrap').style.display='none';
+  document.getElementById('sqDots').innerHTML='';
+  document.getElementById('sqEndWrap').style.display='block';
+  const total=sqMode||sqIdx;
+  document.getElementById('sqFinalScore').textContent=sqLocalScore;
+  let emoji='😊',grade='繼續加油！';
+  if(sqLocalScore>=sqMode*8){emoji='🏆';grade='滿分等級！三角函數大師！';}
+  else if(sqLocalScore>=sqMode*5){emoji='🎯';grade='優秀！你很厲害！';}
+  else if(sqLocalScore>=sqMode*2){emoji='😊';grade='不錯！繼續加油！';}
+  else{emoji='💪';grade='練習使完美，再來！';}
+  document.getElementById('sqEndEmoji').textContent=emoji;
+  document.getElementById('sqGrade').textContent=grade;
+  document.getElementById('sqStatsText').textContent=`本局得分 ${sqLocalScore}，累計總分 ${sharedScore}`;
+}
+
+function sqReset(){
+  document.getElementById('sqEndWrap').style.display='none';
+  document.getElementById('sqStartWrap').style.display='block';
+  document.getElementById('sqTimerFill').style.width='100%';
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('panel2').classList.contains('active'))return;
+  const opts=document.querySelectorAll('.sq-opt');
+  const idx={'1':0,'2':1,'3':2,'4':3}[e.key];
+  if(idx!==undefined&&opts[idx])opts[idx].click();
+});
+
+// Typeset static definition fractions on load
+window.addEventListener('load',()=>{
+  if(window.MathJax){
+    MathJax.typesetPromise(document.querySelectorAll('.def-math')).catch(()=>{});
+  }
+});
+
+/* ═══════════════════════════════════════════
+   INPUT MODE (按壓模式)
+═══════════════════════════════════════════ */
+let currentInputMode = 'press';
+
+function switchInputMode(mode){
+  currentInputMode = mode;
+  const hmtP = document.getElementById('hmtPress');
+  if(hmtP) hmtP.className = 'hmt-btn hmt-active-press';
+}
+</script>
+</body>
+</html>
